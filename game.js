@@ -46,23 +46,24 @@ window.addEventListener('load', () => {
 
     const groundY = canvas.height - 70; 
 
-    // --- AJOUT IMAGES OBSTACLES ---
+    // --- AJOUT IMAGES OBSTACLES (NOMS PROPRES) ---
     const obstacleImages = [];
     const imagePaths = [
         'cactus1.png',
         'cactus2.png',
         'cactus3.png',
-        'cactus4.png' // J'ai renommé Image 4 en cactus4.png
-        // Ajoutez ici les chemins pour les ballots de paille quand vous les aurez mis
-        // 'paille1.png',
-        // 'paille2.png',
-        // 'paille3.png'
+        'cactus4.png' 
     ];
 
     let imagesLoadedCount = 0;
     // Charger toutes les images d'obstacles
     function loadObstacleImages() {
         return new Promise(resolve => {
+            if (imagePaths.length === 0) {
+                resolve();
+                return;
+            }
+            
             imagePaths.forEach(path => {
                 const img = new Image();
                 img.src = path;
@@ -71,12 +72,12 @@ window.addEventListener('load', () => {
                     imagesLoadedCount++;
                     if (imagesLoadedCount === imagePaths.length) {
                         console.log("Toutes les images d'obstacles chargées !");
-                        resolve(); // Résoudre la promesse quand toutes sont chargées
+                        resolve(); 
                     }
                 };
                 img.onerror = () => {
                     console.error(`Erreur de chargement de l'image : ${path}`);
-                    imagesLoadedCount++; // Compter même les échecs pour ne pas bloquer
+                    imagesLoadedCount++; 
                     if (imagesLoadedCount === imagePaths.length) {
                         resolve();
                     }
@@ -113,31 +114,24 @@ window.addEventListener('load', () => {
         }
     }
 
-    // --- MODIFICATION CLASSE OBSTACLE ---
     class Obstacle {
-        constructor(x, y, image, w, h) { // Prend une image au lieu d'une couleur
+        constructor(x, y, image, w, h) { 
             this.x = x;
             this.y = y;
-            // On s'assure que la largeur et hauteur sont définies, sinon on utilise celles de l'image
             this.w = w || image.width;
             this.h = h || image.height;
-            this.image = image; // L'objet Image
+            this.image = image; 
         }
-
         draw() {
-            // Dessine l'image de l'obstacle
             ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
         }
-
         update() {
             this.x -= gameSpeed; 
             this.draw();
         }
     }
-    // --- FIN MODIFICATION CLASSE OBSTACLE ---
 
-    // Initialisation du jeu
-    async function init() { // Rend init asynchrone pour attendre le chargement des images
+    async function init() { 
         player = new Player(50, groundY - 50, 40, 40, '#007bff'); 
         obstacles = [];
         score = 0;
@@ -152,20 +146,15 @@ window.addEventListener('load', () => {
         music.pause();
         music.currentTime = 0;
 
-        // --- AJOUT IMAGES OBSTACLES ---
-        // S'assurer que les images sont chargées avant de démarrer
-        if (obstacleImages.length === 0) { // Charger seulement si pas déjà chargées
+        if (obstacleImages.length === 0) { 
             leaderboardListEl.innerHTML = "<li>Chargement des images...</li>";
             await loadObstacleImages();
-            leaderboardListEl.innerHTML = "<li>Chargement...</li>"; // Réinitialise l'affichage
+            leaderboardListEl.innerHTML = "<li>Chargement...</li>"; 
         }
-        // --- FIN AJOUT IMAGES OBSTACLES ---
         
-        // Charger le leaderboard au démarrage pour le voir avant de jouer
         displayLeaderboard();
     }
 
-    // Fonction de démarrage
     function startGame() {
         playerName = playerNameInput.value || "Anonyme"; 
         
@@ -181,7 +170,6 @@ window.addEventListener('load', () => {
         window.addEventListener('mousedown', handleGameInput);
     }
 
-    // Boucle de jeu principale
     let obstacleTimer = 0; 
     function gameLoop() {
         if (isGameOver) return; 
@@ -194,33 +182,31 @@ window.addEventListener('load', () => {
         player.update();
 
         obstacleTimer++;
-        // --- MODIFICATION APPARITION OBSTACLES ---
-        if (obstacleTimer > 100 && obstacleImages.length > 0) { // Vérifie qu'il y a des images
-            // Choisir une image de cactus aléatoirement
+        
+        let spawnInterval = Math.max(80, 150 - (gameSpeed * 5)); 
+        
+        if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { 
             const randomIndex = Math.floor(Math.random() * obstacleImages.length);
             const selectedImage = obstacleImages[randomIndex];
             
-            // Ajuster la taille de l'obstacle.
-            // On peut définir une largeur fixe et une hauteur proportionnelle,
-            // ou des tailles spécifiques pour chaque image.
-            let obstacleWidth = 50; // Largeur par défaut
+            let obstacleWidth = 50; 
             let obstacleHeight = (selectedImage.height / selectedImage.width) * obstacleWidth;
 
-            // Assurez-vous qu'ils ne soient pas trop hauts
-            if (obstacleHeight > 100) obstacleHeight = 100;
-            if (obstacleWidth > 80) obstacleWidth = 80;
+            if (obstacleHeight > 80) {
+                 obstacleHeight = 80;
+                 obstacleWidth = (selectedImage.width / selectedImage.height) * obstacleHeight;
+            }
 
             let newObstacle = new Obstacle(canvas.width, groundY - obstacleHeight, selectedImage, obstacleWidth, obstacleHeight);
             obstacles.push(newObstacle);
-            obstacleTimer = 0;
+            
+            obstacleTimer = 0 - (Math.random() * 20); 
         }
-        // --- FIN MODIFICATION APPARITION OBSTACLES ---
 
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let obs = obstacles[i];
             obs.update();
 
-            // Vérifier la collision (les calculs de collision sont toujours basés sur les rectangles w/h)
             if (
                 player.x < obs.x + obs.w &&
                 player.x + player.w > obs.x &&
@@ -336,8 +322,6 @@ window.addEventListener('load', () => {
             leaderboardListEl.innerHTML = "<li>Erreur de classement</li>";
         }
     }
-
-    // --- IMPORTANT : Initialisation après le chargement des images d'obstacles ---
-    // Appeler init quand la page est complètement prête
+    
     init();
 });
