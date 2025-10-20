@@ -21,12 +21,22 @@ body {
     justify-content: center;
     align-items: center;
     position: relative;
-    background-color: #d3eafc; /* Couleur de ciel simple */
+    
+    /* --- MODIFICATION FOND D'ÉCRAN --- */
+    /* background-color: #d3eafc; */ /* On supprime l'ancienne couleur */
+    background-image: url('FOND DE PLAN.jpg'); /* On ajoute votre image */
+    background-size: cover; /* L'image remplit l'écran */
+    background-position: center; /* L'image est centrée */
+    background-repeat: no-repeat; /* L'image ne se répète pas */
+    /* --- FIN MODIFICATION --- */
 }
 
 canvas {
-    background-color: #fff;
-    border: 2px solid #333;
+    /* --- MODIFICATION FOND D'ÉCRAN --- */
+    background-color: transparent; /* On rend le canvas transparent */
+    /* border: 2px solid #333; */ /* On supprime la bordure */
+    /* --- FIN MODIFICATION --- */
+    
     /* S'assure que le canvas ne dépasse pas l'écran */
     max-width: 100%;
     max-height: 100%;
@@ -39,6 +49,11 @@ canvas {
     font-size: 1.5em;
     font-weight: bold;
     z-index: 10;
+    
+    /* --- MODIFICATION FOND D'ÉCRAN --- */
+    color: #FFFFFF; /* Score en blanc pour mieux ressortir */
+    text-shadow: 2px 2px 4px #000000; /* Ombre portée pour la lisibilité */
+    /* --- FIN MODIFICATION --- */
 }
 
 /* Écrans de début et de fin */
@@ -47,7 +62,7 @@ canvas {
     width: 90%;
     max-width: 400px;
     padding: 20px;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.9); /* Fond blanc semi-transparent */
     border-radius: 10px;
     text-align: center;
     z-index: 20;
