@@ -1,74 +1,110 @@
 // Attendre que la page soit chargée
 window.addEventListener('load', () => {
 
-    // Configuration de la zone de jeu (Canvas)
+    // --- AJOUT FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "VOTRE_API_KEY", // N'oubliez pas de mettre votre config ici !
+        authDomain: "VOTRE-PROJET.firebaseapp.com",
+        projectId: "VOTRE-PROJET-ID",
+        storageBucket: "VOTRE-PROJET.appspot.com",
+        messagingSenderId: "VOTRE_SENDER_ID",
+        appId: "VOTRE_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const scoresCollection = db.collection("scores");
+    // --- FIN AJOUT FIREBASE ---
+
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    // Éléments de l'interface
     const scoreEl = document.getElementById('score');
     const startScreenEl = document.getElementById('startScreen');
     const gameOverScreenEl = document.getElementById('gameOverScreen');
     const finalScoreEl = document.getElementById('finalScore');
+    
+    const playerNameInput = document.getElementById('playerNameInput');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const leaderboardListEl = document.getElementById('leaderboardList');
+    const restartTextEl = document.getElementById('restartText');
 
-    // --- AJOUT MUSIQUE ---
-    // Charger le fichier audio (assurez-vous qu'il est dans le même dossier)
     const music = new Audio('MONTAGE UNITEAM NOVEMBRE 2025.mp3'); 
-    music.loop = true; // Pour que la musique tourne en boucle
-    // --- FIN AJOUT MUSIQUE ---
+    music.loop = true; 
 
-    // Définir la taille du canvas en format portrait (ex: 9:16)
-    // On prend 90% de la hauteur de l'écran comme base
     canvas.height = window.innerHeight * 0.9;
     canvas.width = canvas.height * (9 / 16);
-
-    // Si le canvas est plus large que l'écran, on le réduit
     if (canvas.width > window.innerWidth * 0.95) {
         canvas.width = window.innerWidth * 0.95;
         canvas.height = canvas.width * (16 / 9);
     }
 
-    // Paramètres du jeu
     let player, obstacles, score, gameSpeed, gravity, isGameOver;
-    let gameLoopId; // Pour stocker l'ID de l'animation frame
+    let gameLoopId; 
+    let playerName = "Anonyme"; 
 
-    // Position du sol
-    const groundY = canvas.height - 70; // 70px depuis le bas
+    const groundY = canvas.height - 70; 
 
-    // Classe pour le joueur (le danseur)
+    // --- AJOUT IMAGES OBSTACLES ---
+    const obstacleImages = [];
+    const imagePaths = [
+        'cactus1.png',
+        'cactus2.png',
+        'cactus3.png',
+        'cactus4.png' // J'ai renommé Image 4 en cactus4.png
+        // Ajoutez ici les chemins pour les ballots de paille quand vous les aurez mis
+        // 'paille1.png',
+        // 'paille2.png',
+        // 'paille3.png'
+    ];
+
+    let imagesLoadedCount = 0;
+    // Charger toutes les images d'obstacles
+    function loadObstacleImages() {
+        return new Promise(resolve => {
+            imagePaths.forEach(path => {
+                const img = new Image();
+                img.src = path;
+                img.onload = () => {
+                    obstacleImages.push(img);
+                    imagesLoadedCount++;
+                    if (imagesLoadedCount === imagePaths.length) {
+                        console.log("Toutes les images d'obstacles chargées !");
+                        resolve(); // Résoudre la promesse quand toutes sont chargées
+                    }
+                };
+                img.onerror = () => {
+                    console.error(`Erreur de chargement de l'image : ${path}`);
+                    imagesLoadedCount++; // Compter même les échecs pour ne pas bloquer
+                    if (imagesLoadedCount === imagePaths.length) {
+                        resolve();
+                    }
+                };
+            });
+        });
+    }
+    // --- FIN AJOUT IMAGES OBSTACLES ---
+
     class Player {
         constructor(x, y, w, h, color) {
-            this.x = x;
-            this.y = y;
-            this.w = w;
-            this.h = h;
-            this.color = color;
-
-            this.dy = 0; // Vitesse verticale (delta y)
-            this.jumpPower = 15;
-            this.isGrounded = false;
+            this.x = x; this.y = y; this.w = w; this.h = h; this.color = color;
+            this.dy = 0; this.jumpPower = 15; this.isGrounded = false;
         }
-
         draw() {
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x, this.y, this.w, this.h);
         }
-
         update() {
-            // Appliquer la gravité
             this.dy += gravity;
             this.y += this.dy;
-
-            // Simuler le sol
             if (this.y + this.h > groundY) {
                 this.y = groundY - this.h;
                 this.dy = 0;
                 this.isGrounded = true;
             }
-
             this.draw();
         }
-
         jump() {
             if (this.isGrounded) {
                 this.dy = -this.jumpPower;
@@ -77,118 +113,130 @@ window.addEventListener('load', () => {
         }
     }
 
-    // Classe pour les obstacles
+    // --- MODIFICATION CLASSE OBSTACLE ---
     class Obstacle {
-        constructor(x, y, w, h, color) {
+        constructor(x, y, image, w, h) { // Prend une image au lieu d'une couleur
             this.x = x;
             this.y = y;
-            this.w = w;
-            this.h = h;
-            this.color = color;
+            // On s'assure que la largeur et hauteur sont définies, sinon on utilise celles de l'image
+            this.w = w || image.width;
+            this.h = h || image.height;
+            this.image = image; // L'objet Image
         }
 
         draw() {
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.w, this.h);
+            // Dessine l'image de l'obstacle
+            ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
         }
 
         update() {
-            this.x -= gameSpeed; // L'obstacle bouge vers la gauche
+            this.x -= gameSpeed; 
             this.draw();
         }
     }
+    // --- FIN MODIFICATION CLASSE OBSTACLE ---
 
     // Initialisation du jeu
-    function init() {
-        // Position initiale du joueur
-        player = new Player(50, groundY - 50, 40, 40, '#007bff'); // Un carré bleu pour l'instant
-        
+    async function init() { // Rend init asynchrone pour attendre le chargement des images
+        player = new Player(50, groundY - 50, 40, 40, '#007bff'); 
         obstacles = [];
         score = 0;
         gameSpeed = 5;
         gravity = 0.8;
         isGameOver = false;
 
-        // Réinitialiser l'interface
         scoreEl.innerText = 'Score: 0';
         gameOverScreenEl.style.display = 'none';
         startScreenEl.style.display = 'flex';
         
-        // --- AJOUT MUSIQUE ---
-        // S'assurer que la musique est en pause et au début
         music.pause();
         music.currentTime = 0;
-        // --- FIN AJOUT MUSIQUE ---
+
+        // --- AJOUT IMAGES OBSTACLES ---
+        // S'assurer que les images sont chargées avant de démarrer
+        if (obstacleImages.length === 0) { // Charger seulement si pas déjà chargées
+            leaderboardListEl.innerHTML = "<li>Chargement des images...</li>";
+            await loadObstacleImages();
+            leaderboardListEl.innerHTML = "<li>Chargement...</li>"; // Réinitialise l'affichage
+        }
+        // --- FIN AJOUT IMAGES OBSTACLES ---
+        
+        // Charger le leaderboard au démarrage pour le voir avant de jouer
+        displayLeaderboard();
     }
 
-    // Fonction de démarrage (appelée par le premier tap)
+    // Fonction de démarrage
     function startGame() {
-        if (!gameLoopId) { // Ne démarre que si le jeu n'est pas déjà lancé
-            startScreenEl.style.display = 'none';
-            
-            // --- AJOUT MUSIQUE ---
-            // Démarrer la musique (les navigateurs l'autorisent car c'est après un "tap")
-            music.play();
-            // --- FIN AJOUT MUSIQUE ---
-            
-            gameLoopId = requestAnimationFrame(gameLoop);
-        }
+        playerName = playerNameInput.value || "Anonyme"; 
+        
+        if (gameLoopId) return; 
+
+        startScreenEl.style.display = 'none';
+        
+        music.play();
+        
+        gameLoopId = requestAnimationFrame(gameLoop);
+
+        window.addEventListener('touchstart', handleGameInput, { passive: false });
+        window.addEventListener('mousedown', handleGameInput);
     }
 
     // Boucle de jeu principale
-    let obstacleTimer = 0; // Compteur pour faire apparaître les obstacles
-    
+    let obstacleTimer = 0; 
     function gameLoop() {
-        if (isGameOver) return; // Arrêter la boucle si c'est fini
+        if (isGameOver) return; 
 
-        // 1. Effacer l'écran
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 2. Dessiner le sol
         ctx.fillStyle = '#666';
         ctx.fillRect(0, groundY, canvas.width, 70);
 
-        // 3. Mettre à jour le joueur
         player.update();
 
-        // 4. Gérer les obstacles
         obstacleTimer++;
-        // Faire apparaître un obstacle toutes les X frames (ajustez 100 pour la difficulté)
-        if (obstacleTimer > 100) {
-            let obstacleHeight = Math.random() * 40 + 30; // Hauteur aléatoire
-            let newObstacle = new Obstacle(canvas.width, groundY - obstacleHeight, 30, obstacleHeight, '#dc3545'); // Un carré rouge
+        // --- MODIFICATION APPARITION OBSTACLES ---
+        if (obstacleTimer > 100 && obstacleImages.length > 0) { // Vérifie qu'il y a des images
+            // Choisir une image de cactus aléatoirement
+            const randomIndex = Math.floor(Math.random() * obstacleImages.length);
+            const selectedImage = obstacleImages[randomIndex];
+            
+            // Ajuster la taille de l'obstacle.
+            // On peut définir une largeur fixe et une hauteur proportionnelle,
+            // ou des tailles spécifiques pour chaque image.
+            let obstacleWidth = 50; // Largeur par défaut
+            let obstacleHeight = (selectedImage.height / selectedImage.width) * obstacleWidth;
+
+            // Assurez-vous qu'ils ne soient pas trop hauts
+            if (obstacleHeight > 100) obstacleHeight = 100;
+            if (obstacleWidth > 80) obstacleWidth = 80;
+
+            let newObstacle = new Obstacle(canvas.width, groundY - obstacleHeight, selectedImage, obstacleWidth, obstacleHeight);
             obstacles.push(newObstacle);
             obstacleTimer = 0;
         }
+        // --- FIN MODIFICATION APPARITION OBSTACLES ---
 
-        // Mettre à jour et dessiner chaque obstacle
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let obs = obstacles[i];
             obs.update();
 
-            // Vérifier la collision
+            // Vérifier la collision (les calculs de collision sont toujours basés sur les rectangles w/h)
             if (
                 player.x < obs.x + obs.w &&
                 player.x + player.w > obs.x &&
                 player.y < obs.y + obs.h &&
                 player.y + player.h > obs.y
             ) {
-                // Collision !
                 endGame();
             }
 
-            // Supprimer l'obstacle s'il sort de l'écran
             if (obs.x + obs.w < 0) {
                 obstacles.splice(i, 1);
-                // Augmenter le score quand on passe un obstacle
                 updateScore();
             }
         }
         
-        // Augmenter la vitesse progressivement
         gameSpeed += 0.003;
-
-        // Continuer la boucle
         gameLoopId = requestAnimationFrame(gameLoop);
     }
 
@@ -197,51 +245,99 @@ window.addEventListener('load', () => {
         scoreEl.innerText = `Score: ${score}`;
     }
 
-    function endGame() {
-        isGameOver = true;
-        cancelAnimationFrame(gameLoopId); // Arrête la boucle de jeu
-        gameLoopId = null; // Réinitialise l'ID
+    async function endGame() {
+        if (isGameOver) return;
         
-        // --- AJOUT MUSIQUE ---
-        // Arrêter la musique lors du Game Over
+        isGameOver = true;
+        cancelAnimationFrame(gameLoopId); 
+        gameLoopId = null; 
+        
+        window.removeEventListener('touchstart', handleGameInput);
+        window.removeEventListener('mousedown', handleGameInput);
+        
         music.pause();
-        music.currentTime = 0; // Remet au début
-        // --- FIN AJOUT MUSIQUE ---
+        music.currentTime = 0; 
         
         finalScoreEl.innerText = score;
         gameOverScreenEl.style.display = 'flex';
+        
+        leaderboardListEl.innerHTML = "<li>Sauvegarde...</li>";
+        try {
+            await saveScore(playerName, score);
+            await displayLeaderboard();
+        } catch (error) {
+            console.error("Erreur avec Firebase: ", error);
+            leaderboardListEl.innerHTML = "<li>Erreur de classement</li>";
+        }
     }
 
     function resetGame() {
-        init(); // Réinitialise toutes les variables
-        // Le jeu redémarrera au prochain 'tap' grâce à la logique des listeners
+        init(); 
     }
-
-
-    // ==========================================================
-    // == GESTION DES CONTRÔLES (TACTILE ET SOURIS) ==
-    // ==========================================================
-
-    // C'est la partie qui répond à votre demande :
     
-    function handleInput() {
-        if (isGameOver) {
-            // Si le jeu est fini, le tap recommence le jeu
-            resetGame();
-        } else {
-            // Si le jeu n'a pas commencé, il le démarre
-            startGame();
-            // Pendant le jeu, il fait sauter le joueur
+    function handleGameInput(e) {
+        if (e) e.preventDefault();
+        if (!isGameOver) {
             player.jump();
         }
     }
-    
-    // Écouteur pour le tactile
-    window.addEventListener('touchstart', handleInput, { passive: false });
-    
-    // Écouteur pour la souris (pour tester sur ordinateur)
-    window.addEventListener('mousedown', handleInput);
 
-    // Lancer l'initialisation au chargement
+    startGameBtn.addEventListener('click', startGame);
+    startGameBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        startGame();
+    }, { passive: false });
+
+    restartTextEl.addEventListener('click', resetGame);
+    restartTextEl.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        resetGame();
+    }, { passive: false });
+
+    async function saveScore(name, score) {
+        try {
+            await scoresCollection.add({
+                name: name,
+                score: score,
+                timestamp: new Date()
+            });
+            console.log("Score sauvegardé !");
+        } catch (error) {
+            console.error("Erreur de sauvegarde: ", error);
+        }
+    }
+
+    async function displayLeaderboard() {
+        leaderboardListEl.innerHTML = "<li>Chargement...</li>";
+        
+        try {
+            const snapshot = await scoresCollection
+                .orderBy("score", "desc")
+                .limit(5)
+                .get();
+
+            if (snapshot.empty) {
+                leaderboardListEl.innerHTML = "<li>Aucun score</li>";
+                return;
+            }
+
+            leaderboardListEl.innerHTML = "";
+            let rank = 1;
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const li = document.createElement("li");
+                li.innerHTML = `${rank}. ${data.name}: <strong>${data.score}</strong>`;
+                leaderboardListEl.appendChild(li);
+                rank++;
+            });
+
+        } catch (error) {
+            console.error("Erreur de lecture: ", error);
+            leaderboardListEl.innerHTML = "<li>Erreur de classement</li>";
+        }
+    }
+
+    // --- IMPORTANT : Initialisation après le chargement des images d'obstacles ---
+    // Appeler init quand la page est complètement prête
     init();
 });
