@@ -1,21 +1,7 @@
 // Attendre que la page soit chargée
 window.addEventListener('load', () => {
 
-    // --- AJOUT FIREBASE ---
-    const firebaseConfig = {
-        apiKey: "VOTRE_API_KEY", // N'oubliez pas de mettre votre config ici !
-        authDomain: "VOTRE-PROJET.firebaseapp.com",
-        projectId: "VOTRE-PROJET-ID",
-        storageBucket: "VOTRE-PROJET.appspot.com",
-        messagingSenderId: "VOTRE_SENDER_ID",
-        appId: "VOTRE_APP_ID"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const scoresCollection = db.collection("scores");
-    // --- FIN AJOUT FIREBASE ---
-
+    // --- TOUT LE CODE FIREBASE A ÉTÉ SUPPRIMÉ ---
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -25,10 +11,7 @@ window.addEventListener('load', () => {
     const gameOverScreenEl = document.getElementById('gameOverScreen');
     const finalScoreEl = document.getElementById('finalScore');
     
-    const playerNameInput = document.getElementById('playerNameInput');
-    const startGameBtn = document.getElementById('startGameBtn');
-    const leaderboardListEl = document.getElementById('leaderboardList');
-    const restartTextEl = document.getElementById('restartText');
+    // --- SUPPRESSION DES ÉLÉMENTS DE CLASSEMENT (playerNameInput, etc.) ---
 
     const music = new Audio('MONTAGE UNITEAM NOVEMBRE 2025.mp3'); 
     music.loop = true; 
@@ -42,11 +25,11 @@ window.addEventListener('load', () => {
 
     let player, obstacles, score, gameSpeed, gravity, isGameOver;
     let gameLoopId; 
-    let playerName = "Anonyme"; 
+    // --- SUPPRESSION DE 'playerName' ---
 
     const groundY = canvas.height - 70; 
 
-    // --- AJOUT IMAGES OBSTACLES (NOMS PROPRES) ---
+    // --- CHARGEMENT DES IMAGES OBSTACLES (CONSERVÉ) ---
     const obstacleImages = [];
     const imagePaths = [
         'cactus1.png',
@@ -56,7 +39,6 @@ window.addEventListener('load', () => {
     ];
 
     let imagesLoadedCount = 0;
-    // Charger toutes les images d'obstacles
     function loadObstacleImages() {
         return new Promise(resolve => {
             if (imagePaths.length === 0) {
@@ -85,8 +67,9 @@ window.addEventListener('load', () => {
             });
         });
     }
-    // --- FIN AJOUT IMAGES OBSTACLES ---
+    // --- FIN CHARGEMENT IMAGES ---
 
+    // --- CLASSE PLAYER (inchangée, utilise toujours un carré bleu) ---
     class Player {
         constructor(x, y, w, h, color) {
             this.x = x; this.y = y; this.w = w; this.h = h; this.color = color;
@@ -113,7 +96,9 @@ window.addEventListener('load', () => {
             }
         }
     }
+    // --- FIN CLASSE PLAYER ---
 
+    // --- CLASSE OBSTACLE (inchangée) ---
     class Obstacle {
         constructor(x, y, image, w, h) { 
             this.x = x;
@@ -130,6 +115,7 @@ window.addEventListener('load', () => {
             this.draw();
         }
     }
+    // --- FIN CLASSE OBSTACLE ---
 
     async function init() { 
         player = new Player(50, groundY - 50, 40, 40, '#007bff'); 
@@ -146,17 +132,15 @@ window.addEventListener('load', () => {
         music.pause();
         music.currentTime = 0;
 
+        // On charge les images, mais sans message dans le classement
         if (obstacleImages.length === 0) { 
-            leaderboardListEl.innerHTML = "<li>Chargement des images...</li>";
+            console.log("Chargement des images...");
             await loadObstacleImages();
-            leaderboardListEl.innerHTML = "<li>Chargement...</li>"; 
         }
-        
-        displayLeaderboard();
     }
 
     function startGame() {
-        playerName = playerNameInput.value || "Anonyme"; 
+        // --- SUPPRESSION DE LA LOGIQUE DU NOM DU JOUEUR ---
         
         if (gameLoopId) return; 
 
@@ -165,9 +149,6 @@ window.addEventListener('load', () => {
         music.play();
         
         gameLoopId = requestAnimationFrame(gameLoop);
-
-        window.addEventListener('touchstart', handleGameInput, { passive: false });
-        window.addEventListener('mousedown', handleGameInput);
     }
 
     let obstacleTimer = 0; 
@@ -238,90 +219,41 @@ window.addEventListener('load', () => {
         cancelAnimationFrame(gameLoopId); 
         gameLoopId = null; 
         
-        window.removeEventListener('touchstart', handleGameInput);
-        window.removeEventListener('mousedown', handleGameInput);
-        
         music.pause();
         music.currentTime = 0; 
         
         finalScoreEl.innerText = score;
         gameOverScreenEl.style.display = 'flex';
         
-        leaderboardListEl.innerHTML = "<li>Sauvegarde...</li>";
-        try {
-            await saveScore(playerName, score);
-            await displayLeaderboard();
-        } catch (error) {
-            console.error("Erreur avec Firebase: ", error);
-            leaderboardListEl.innerHTML = "<li>Erreur de classement</li>";
-        }
+        // --- SUPPRESSION DES APPELS À FIREBASE ---
     }
 
     function resetGame() {
         init(); 
     }
     
-    function handleGameInput(e) {
-        if (e) e.preventDefault();
-        if (!isGameOver) {
+    // --- GESTION DES CONTRÔLES SIMPLIFIÉE (RETOUR À L'ORIGINE) ---
+    function handleInput() {
+        if (isGameOver) {
+            // Si le jeu est fini, le tap recommence le jeu
+            resetGame();
+        } else {
+            // Si le jeu n'a pas commencé, il le démarre
+            startGame();
+            // Pendant le jeu, il fait sauter le joueur
             player.jump();
         }
     }
-
-    startGameBtn.addEventListener('click', startGame);
-    startGameBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        startGame();
-    }, { passive: false });
-
-    restartTextEl.addEventListener('click', resetGame);
-    restartTextEl.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        resetGame();
-    }, { passive: false });
-
-    async function saveScore(name, score) {
-        try {
-            await scoresCollection.add({
-                name: name,
-                score: score,
-                timestamp: new Date()
-            });
-            console.log("Score sauvegardé !");
-        } catch (error) {
-            console.error("Erreur de sauvegarde: ", error);
-        }
-    }
-
-    async function displayLeaderboard() {
-        leaderboardListEl.innerHTML = "<li>Chargement...</li>";
-        
-        try {
-            const snapshot = await scoresCollection
-                .orderBy("score", "desc")
-                .limit(5)
-                .get();
-
-            if (snapshot.empty) {
-                leaderboardListEl.innerHTML = "<li>Aucun score</li>";
-                return;
-            }
-
-            leaderboardListEl.innerHTML = "";
-            let rank = 1;
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const li = document.createElement("li");
-                li.innerHTML = `${rank}. ${data.name}: <strong>${data.score}</strong>`;
-                leaderboardListEl.appendChild(li);
-                rank++;
-            });
-
-        } catch (error) {
-            console.error("Erreur de lecture: ", error);
-            leaderboardListEl.innerHTML = "<li>Erreur de classement</li>";
-        }
-    }
     
+    // Écouteur pour le tactile
+    window.addEventListener('touchstart', handleInput, { passive: false });
+    
+    // Écouteur pour la souris (pour tester sur ordinateur)
+    window.addEventListener('mousedown', handleInput);
+    // --- FIN GESTION DES CONTRÔLES ---
+
+    // --- SUPPRESSION DES FONCTIONS FIREBASE (saveScore, displayLeaderboard) ---
+    
+    // Lancement initial
     init();
 });

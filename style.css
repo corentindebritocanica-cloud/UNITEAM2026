@@ -9,35 +9,26 @@ body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
     color: #333;
-    /* Empêche le défilement et le zoom tactile */
     overflow: hidden;
     touch-action: manipulation;
 }
 
 .game-container {
-    width: 100vw; /* 100% de la largeur de la vue */
-    height: 100vh; /* 100% de la hauteur de la vue */
+    width: 100vw; 
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
     
-    /* --- MODIFICATION FOND D'ÉCRAN --- */
-    /* background-color: #d3eafc; */ /* On supprime l'ancienne couleur */
-    background-image: url('FOND DE PLAN.jpg'); /* On ajoute votre image */
-    background-size: cover; /* L'image remplit l'écran */
-    background-position: center; /* L'image est centrée */
-    background-repeat: no-repeat; /* L'image ne se répète pas */
-    /* --- FIN MODIFICATION --- */
+    background-image: url('FOND DE PLAN.jpg'); 
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
 }
 
 canvas {
-    /* --- MODIFICATION FOND D'ÉCRAN --- */
-    background-color: transparent; /* On rend le canvas transparent */
-    /* border: 2px solid #333; */ /* On supprime la bordure */
-    /* --- FIN MODIFICATION --- */
-    
-    /* S'assure que le canvas ne dépasse pas l'écran */
+    background-color: transparent; 
     max-width: 100%;
     max-height: 100%;
 }
@@ -50,10 +41,8 @@ canvas {
     font-weight: bold;
     z-index: 10;
     
-    /* --- MODIFICATION FOND D'ÉCRAN --- */
-    color: #FFFFFF; /* Score en blanc pour mieux ressortir */
-    text-shadow: 2px 2px 4px #000000; /* Ombre portée pour la lisibilité */
-    /* --- FIN MODIFICATION --- */
+    color: #FFFFFF; 
+    text-shadow: 2px 2px 4px #000000; 
 }
 
 /* Écrans de début et de fin */
@@ -62,25 +51,23 @@ canvas {
     width: 90%;
     max-width: 400px;
     padding: 20px;
-    background-color: rgba(255, 255, 255, 0.9); /* Fond blanc semi-transparent */
+    background-color: rgba(255, 255, 255, 0.9); 
     border-radius: 10px;
     text-align: center;
     z-index: 20;
     border: 2px solid #333;
-}
-
-#startScreen {
-    display: flex; /* S'affichera par défaut */
+    
+    display: flex; 
     flex-direction: column;
     gap: 15px;
 }
 
 #gameOverScreen {
     display: none; /* Caché par défaut */
-    flex-direction: column;
-    gap: 15px;
 }
 
 h1 {
     color: #007bff;
 }
+
+/* --- TOUT LE CSS DU CLASSEMENT A ÉTÉ SUPPRIMÉ --- */
