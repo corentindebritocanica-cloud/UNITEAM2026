@@ -26,53 +26,88 @@ window.addEventListener('load', () => {
 
     const groundY = canvas.height - 70; 
 
+    // --- AJOUT DES IMAGES JOUEUR ---
     const obstacleImages = [];
-    const imagePaths = [
+    const playerHeadImages = []; // Stocker les têtes ici
+    let selectedHeadImage = null; // Tête choisie pour la partie
+    const PLAYER_WIDTH = 50; // Taille fixe pour la tête (collision)
+    const PLAYER_HEIGHT = 50; // Taille fixe pour la tête (collision)
+
+    const obstacleImagePaths = [
         'cactus1.png',
         'cactus2.png',
         'cactus3.png',
         'cactus4.png' 
     ];
 
+    // La liste de tes 18 têtes (RENOMMÉES EN .PNG !)
+    const playerImagePaths = [
+        'perso1.png', 'perso2.png', 'perso3.png', 'perso4.png', 'perso5.png',
+        'perso6.png', 'perso7.png', 'perso8.png', 'perso9.png', 'perso10.png',
+        'perso11.png', 'perso12.png', 'perso13.png', 'perso14.png', 'perso15.png',
+        'perso16.png', 'perso17.png', 'perso18.png'
+    ];
+    // --- FIN AJOUT IMAGES JOUEUR ---
+
     let imagesLoadedCount = 0;
-    function loadObstacleImages() {
+    const totalImages = obstacleImagePaths.length + playerImagePaths.length;
+
+    // Fonction unique pour charger TOUTES les images (obstacles ET têtes)
+    function loadGameImages() {
         return new Promise(resolve => {
-            if (imagePaths.length === 0) {
-                resolve();
-                return;
-            }
-            
-            imagePaths.forEach(path => {
+            if (totalImages === 0) resolve();
+
+            const loadImage = (path, targetArray) => {
                 const img = new Image();
                 img.src = path;
                 img.onload = () => {
-                    obstacleImages.push(img);
+                    targetArray.push(img);
                     imagesLoadedCount++;
-                    if (imagesLoadedCount === imagePaths.length) {
-                        console.log("Toutes les images d'obstacles chargées !");
+                    if (imagesLoadedCount === totalImages) {
+                        console.log("Toutes les images (obstacles et têtes) chargées !");
                         resolve(); 
                     }
                 };
                 img.onerror = () => {
                     console.error(`Erreur de chargement de l'image : ${path}`);
                     imagesLoadedCount++; 
-                    if (imagesLoadedCount === imagePaths.length) {
+                    if (imagesLoadedCount === totalImages) {
                         resolve();
                     }
                 };
-            });
+            };
+
+            obstacleImagePaths.forEach(path => loadImage(path, obstacleImages));
+            playerImagePaths.forEach(path => loadImage(path, playerHeadImages));
         });
     }
+    // --- FIN CHARGEMENT IMAGES ---
 
+    // --- MODIFICATION CLASSE PLAYER ---
     class Player {
-        constructor(x, y, w, h, color) {
-            this.x = x; this.y = y; this.w = w; this.h = h; this.color = color;
-            this.dy = 0; this.jumpPower = 15; this.isGrounded = false;
+        constructor(x, y, w, h, image) {
+            this.x = x; 
+            this.y = y; 
+            this.w = w; // Largeur pour la collision
+            this.h = h; // Hauteur pour la collision
+            this.image = image; // L'image de tête à dessiner
+
+            this.dy = 0; 
+            this.jumpPower = 15; 
+            this.isGrounded = false;
         }
+
         draw() {
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.w, this.h);
+            // Dessine l'image de la tête
+            if (this.image) {
+                ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
+            } else {
+                // Fallback si l'image n'est pas chargée (carré bleu)
+                ctx.fillStyle = '#007bff';
+                ctx.fillRect(this.x, this.y, this.w, this.h);
+            }
         }
+
         update() {
             this.dy += gravity;
             this.y += this.dy;
@@ -83,6 +118,7 @@ window.addEventListener('load', () => {
             }
             this.draw();
         }
+
         jump() {
             if (this.isGrounded) {
                 this.dy = -this.jumpPower;
@@ -90,7 +126,9 @@ window.addEventListener('load', () => {
             }
         }
     }
+    // --- FIN CLASSE PLAYER ---
 
+    // --- CLASSE OBSTACLE (inchangée) ---
     class Obstacle {
         constructor(x, y, image, w, h) { 
             this.x = x;
@@ -107,12 +145,27 @@ window.addEventListener('load', () => {
             this.draw();
         }
     }
+    // --- FIN CLASSE OBSTACLE ---
 
     async function init() { 
         isReady = false; 
         startTextEl.innerText = "Chargement..."; 
 
-        player = new Player(50, groundY - 50, 40, 40, '#007bff'); 
+        // --- CHOIX ALÉATOIRE DE LA TÊTE ---
+        // On ne recharge les images que si elles ne le sont pas déjà
+        if (playerHeadImages.length === 0) { 
+            console.log("Chargement des images...");
+            await loadGameImages();
+        }
+
+        // Choisir une tête au hasard dans la liste
+        const randomIndex = Math.floor(Math.random() * playerHeadImages.length);
+        selectedHeadImage = playerHeadImages[randomIndex];
+        // --- FIN CHOIX TÊTE ---
+
+        // Créer le nouveau joueur avec l'image de tête choisie
+        player = new Player(50, groundY - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT, selectedHeadImage); 
+        
         obstacles = [];
         score = 0;
         gameSpeed = 5;
@@ -120,17 +173,11 @@ window.addEventListener('load', () => {
         isGameOver = false;
 
         scoreEl.innerText = 'Score: 0';
-        gameOverScreenEl.style.display = 'none'; // <- Cache l'écran Game Over
-        startScreenEl.style.display = 'flex'; // <- Montre l'écran de début
+        gameOverScreenEl.style.display = 'none';
+        startScreenEl.style.display = 'flex';
         
         music.pause();
         music.currentTime = 0;
-
-        // On s'assure que les images sont chargées (ne se recharge pas si déjà fait)
-        if (obstacleImages.length === 0) { 
-            console.log("Chargement des images...");
-            await loadObstacleImages();
-        }
 
         isReady = true; 
         startTextEl.innerText = "Appuyez pour commencer"; 
@@ -161,7 +208,7 @@ window.addEventListener('load', () => {
         ctx.fillStyle = '#666';
         ctx.fillRect(0, groundY, canvas.width, 70);
 
-        player.update();
+        player.update(); // Mettre à jour la tête volante
 
         obstacleTimer++;
         
@@ -189,6 +236,7 @@ window.addEventListener('load', () => {
             let obs = obstacles[i];
             obs.update();
 
+            // Collision (w et h sont définis à 50x50 pour le joueur)
             if (
                 player.x < obs.x + obs.w &&
                 player.x + player.w > obs.x &&
@@ -213,7 +261,7 @@ window.addEventListener('load', () => {
         scoreEl.innerText = `Score: ${score}`;
     }
 
-    function endGame() { // Pas besoin que 'endGame' soit async
+    function endGame() {
         if (isGameOver) return;
         
         isGameOver = true;
@@ -227,20 +275,15 @@ window.addEventListener('load', () => {
         gameOverScreenEl.style.display = 'flex';
     }
 
-    // --- MODIFIÉ ---
-    // On rend resetGame 'async' pour qu'il puisse 'await' init
     async function resetGame() {
-        await init(); // On attend que l'initialisation soit VRAIMENT finie
+        await init(); // Réinitialise et choisit une NOUVELLE tête au hasard
     }
     
-    // --- MODIFIÉ ---
-    // On rend handleInput 'async' pour qu'il puisse 'await' resetGame
     async function handleInput() {
-        // On permet le tap sur l'écran Game Over même si le jeu n'est pas "prêt"
         if (!isReady && !isGameOver) return; 
 
         if (isGameOver) {
-            await resetGame(); // On attend que le reset soit VRAIMENT fini
+            await resetGame(); 
         } else {
             if (!gameLoopId) {
                 startGame();
@@ -252,5 +295,5 @@ window.addEventListener('load', () => {
     window.addEventListener('touchstart', handleInput, { passive: false });
     window.addEventListener('mousedown', handleInput);
     
-    init();
+    init(); // Lancement initial
 });
