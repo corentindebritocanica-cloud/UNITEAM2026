@@ -1,8 +1,6 @@
 // Attendre que la page soit chargée
 window.addEventListener('load', () => {
 
-    // --- TOUT LE CODE FIREBASE A ÉTÉ SUPPRIMÉ ---
-
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -10,8 +8,7 @@ window.addEventListener('load', () => {
     const startScreenEl = document.getElementById('startScreen');
     const gameOverScreenEl = document.getElementById('gameOverScreen');
     const finalScoreEl = document.getElementById('finalScore');
-    
-    // --- SUPPRESSION DES ÉLÉMENTS DE CLASSEMENT (playerNameInput, etc.) ---
+    const startTextEl = startScreenEl.querySelector('p'); 
 
     const music = new Audio('MONTAGE UNITEAM NOVEMBRE 2025.mp3'); 
     music.loop = true; 
@@ -25,11 +22,10 @@ window.addEventListener('load', () => {
 
     let player, obstacles, score, gameSpeed, gravity, isGameOver;
     let gameLoopId; 
-    // --- SUPPRESSION DE 'playerName' ---
+    let isReady = false; 
 
     const groundY = canvas.height - 70; 
 
-    // --- CHARGEMENT DES IMAGES OBSTACLES (CONSERVÉ) ---
     const obstacleImages = [];
     const imagePaths = [
         'cactus1.png',
@@ -67,9 +63,7 @@ window.addEventListener('load', () => {
             });
         });
     }
-    // --- FIN CHARGEMENT IMAGES ---
 
-    // --- CLASSE PLAYER (inchangée, utilise toujours un carré bleu) ---
     class Player {
         constructor(x, y, w, h, color) {
             this.x = x; this.y = y; this.w = w; this.h = h; this.color = color;
@@ -96,9 +90,7 @@ window.addEventListener('load', () => {
             }
         }
     }
-    // --- FIN CLASSE PLAYER ---
 
-    // --- CLASSE OBSTACLE (inchangée) ---
     class Obstacle {
         constructor(x, y, image, w, h) { 
             this.x = x;
@@ -115,9 +107,11 @@ window.addEventListener('load', () => {
             this.draw();
         }
     }
-    // --- FIN CLASSE OBSTACLE ---
 
     async function init() { 
+        isReady = false; 
+        startTextEl.innerText = "Chargement..."; 
+
         player = new Player(50, groundY - 50, 40, 40, '#007bff'); 
         obstacles = [];
         score = 0;
@@ -126,27 +120,34 @@ window.addEventListener('load', () => {
         isGameOver = false;
 
         scoreEl.innerText = 'Score: 0';
-        gameOverScreenEl.style.display = 'none';
-        startScreenEl.style.display = 'flex';
+        gameOverScreenEl.style.display = 'none'; // <- Cache l'écran Game Over
+        startScreenEl.style.display = 'flex'; // <- Montre l'écran de début
         
         music.pause();
         music.currentTime = 0;
 
-        // On charge les images, mais sans message dans le classement
+        // On s'assure que les images sont chargées (ne se recharge pas si déjà fait)
         if (obstacleImages.length === 0) { 
             console.log("Chargement des images...");
             await loadObstacleImages();
         }
+
+        isReady = true; 
+        startTextEl.innerText = "Appuyez pour commencer"; 
     }
 
     function startGame() {
-        // --- SUPPRESSION DE LA LOGIQUE DU NOM DU JOUEUR ---
-        
         if (gameLoopId) return; 
-
         startScreenEl.style.display = 'none';
         
-        music.play();
+        var promise = music.play();
+        if (promise !== undefined) {
+            promise.then(_ => {
+                console.log("Musique lancée !");
+            }).catch(error => {
+                console.log("La musique a été bloquée par le navigateur.");
+            });
+        }
         
         gameLoopId = requestAnimationFrame(gameLoop);
     }
@@ -212,7 +213,7 @@ window.addEventListener('load', () => {
         scoreEl.innerText = `Score: ${score}`;
     }
 
-    async function endGame() {
+    function endGame() { // Pas besoin que 'endGame' soit async
         if (isGameOver) return;
         
         isGameOver = true;
@@ -224,36 +225,32 @@ window.addEventListener('load', () => {
         
         finalScoreEl.innerText = score;
         gameOverScreenEl.style.display = 'flex';
-        
-        // --- SUPPRESSION DES APPELS À FIREBASE ---
     }
 
-    function resetGame() {
-        init(); 
+    // --- MODIFIÉ ---
+    // On rend resetGame 'async' pour qu'il puisse 'await' init
+    async function resetGame() {
+        await init(); // On attend que l'initialisation soit VRAIMENT finie
     }
     
-    // --- GESTION DES CONTRÔLES SIMPLIFIÉE (RETOUR À L'ORIGINE) ---
-    function handleInput() {
+    // --- MODIFIÉ ---
+    // On rend handleInput 'async' pour qu'il puisse 'await' resetGame
+    async function handleInput() {
+        // On permet le tap sur l'écran Game Over même si le jeu n'est pas "prêt"
+        if (!isReady && !isGameOver) return; 
+
         if (isGameOver) {
-            // Si le jeu est fini, le tap recommence le jeu
-            resetGame();
+            await resetGame(); // On attend que le reset soit VRAIMENT fini
         } else {
-            // Si le jeu n'a pas commencé, il le démarre
-            startGame();
-            // Pendant le jeu, il fait sauter le joueur
+            if (!gameLoopId) {
+                startGame();
+            }
             player.jump();
         }
     }
     
-    // Écouteur pour le tactile
     window.addEventListener('touchstart', handleInput, { passive: false });
-    
-    // Écouteur pour la souris (pour tester sur ordinateur)
     window.addEventListener('mousedown', handleInput);
-    // --- FIN GESTION DES CONTRÔLES ---
-
-    // --- SUPPRESSION DES FONCTIONS FIREBASE (saveScore, displayLeaderboard) ---
     
-    // Lancement initial
     init();
 });
