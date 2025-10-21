@@ -49,30 +49,20 @@ window.addEventListener('load', () => {
     function loadGameImages() {
         return new Promise(resolve => {
             if (playerHeadImages.length > 0 && obstacleImages.length > 0 && collectibleImages.length > 0) { 
-                resolve();
-                return;
+                resolve(); return;
             }
             imagesLoadedCount = 0; 
-            playerHeadImages.length = 0;
-            obstacleImages.length = 0;
-            collectibleImages.length = 0;
-
+            playerHeadImages.length = 0; obstacleImages.length = 0; collectibleImages.length = 0;
             if (totalImages === 0) resolve();
             
             const loadImage = (path, targetArray) => {
-                const img = new Image();
-                img.src = path;
+                const img = new Image(); img.src = path;
                 img.onload = () => {
-                    targetArray.push(img);
-                    imagesLoadedCount++;
-                    if (imagesLoadedCount === totalImages) {
-                        console.log("Toutes les images chargées !");
-                        resolve(); 
-                    }
+                    targetArray.push(img); imagesLoadedCount++;
+                    if (imagesLoadedCount === totalImages) { console.log("Images chargées !"); resolve(); }
                 };
                 img.onerror = () => {
-                    console.error(`Erreur de chargement : ${path}`);
-                    imagesLoadedCount++; 
+                    console.error(`Erreur chargement : ${path}`); imagesLoadedCount++; 
                     if (imagesLoadedCount === totalImages) resolve();
                 };
             };
@@ -84,7 +74,7 @@ window.addEventListener('load', () => {
     }
 
     // --- Classe Particule ---
-    class Particle {
+    class Particle { /* ... (inchangée) ... */ 
         constructor(x, y, color) {
             this.x = x; this.y = y; this.color = color;
             this.size = Math.random() * 4 + 3; 
@@ -103,14 +93,14 @@ window.addEventListener('load', () => {
         }
     }
 
-    // --- CLASSE PLAYER (avec double saut) ---
+    // --- CLASSE PLAYER (Double Saut Corrigé) ---
     class Player {
         constructor(x, y, w, h, image) {
             this.x = x; this.y = y; this.w = w; this.h = h; this.image = image;
             this.dy = 0; this.jumpPower = 15; this.isGrounded = false;
             this.jumpCount = 0; this.maxJumps = 2; 
         }
-        draw() {
+        draw() { /* ... (inchangée) ... */
             if (this.image) {
                 ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
             } else { 
@@ -118,8 +108,7 @@ window.addEventListener('load', () => {
                 ctx.fillRect(this.x, this.y, this.w, this.h);
             }
         }
-        
-        emitParticles() {
+        emitParticles() { /* ... (inchangée) ... */ 
             if (gameLoopId && !isGameOver) {
                  const colors = ['#FFD700', '#FFFFFF', '#C0C0C0', '#FFEC8B'];
                  const color = colors[Math.floor(Math.random() * colors.length)];
@@ -127,13 +116,17 @@ window.addEventListener('load', () => {
                  particles.push(new Particle(x, y, color));
             }
         }
-
         update() {
             this.dy += gravity; this.y += this.dy;
             
-            if (this.y + this.h > groundY) {
-                this.y = groundY - this.h; this.dy = 0; this.isGrounded = true;
-                this.jumpCount = 0; 
+            // Gestion du sol et reset du compteur de sauts
+            if (this.y + this.h >= groundY) { // Utilise >= pour plus de sûreté
+                this.y = groundY - this.h; 
+                this.dy = 0; 
+                if (!this.isGrounded) { // Si on vient juste d'atterrir
+                    this.jumpCount = 0; // Reset le compteur
+                }
+                this.isGrounded = true;
             } else {
                 this.isGrounded = false;
             }
@@ -142,17 +135,19 @@ window.addEventListener('load', () => {
             this.emitParticles();
         }
         
+        // CORRECTION DOUBLE SAUT
         jump() {
-            if (this.jumpCount < this.maxJumps) { 
+            // Vérifie si on peut sauter (soit au sol, soit < max sauts)
+            if (this.isGrounded || this.jumpCount < this.maxJumps) { 
                 this.dy = -this.jumpPower; 
                 this.jumpCount++; 
-                this.isGrounded = false; 
+                this.isGrounded = false; // Important même pour le 2e saut
             }
         }
     }
     
     // --- CLASSE OBSTACLE ---
-    class Obstacle {
+    class Obstacle { /* ... (inchangée) ... */ 
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w || image.width; this.h = h || image.height;
             this.image = image; 
@@ -162,222 +157,100 @@ window.addEventListener('load', () => {
     }
 
     // --- CLASSE COLLECTIBLE ---
-    class Collectible {
+    class Collectible { /* ... (inchangée) ... */
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w; this.h = h; this.image = image; 
         }
         draw() { ctx.drawImage(this.image, this.x, this.y, this.w, this.h); }
         update() { this.x -= gameSpeed; this.draw(); }
-    }
+     }
 
     // --- 'initGameData' prépare une nouvelle partie ---
-    async function initGameData() {
+    async function initGameData() { /* ... (inchangée) ... */ 
         gameContainer.classList.remove('shake');
-        
-        if (currentMusic) {
-            currentMusic.pause();
-            currentMusic.currentTime = 0;
-            currentMusic = null;
-        }
-        
+        if (currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; currentMusic = null; }
         const musicIndex = Math.floor(Math.random() * musicPaths.length);
-        currentMusic = new Audio(musicPaths[musicIndex]);
-        currentMusic.loop = true;
-
+        currentMusic = new Audio(musicPaths[musicIndex]); currentMusic.loop = true;
         await loadGameImages(); 
-        
         const randomIndex = Math.floor(Math.random() * playerHeadImages.length);
         selectedHeadImage = playerHeadImages.length > 0 ? playerHeadImages[randomIndex] : null;
-
         gravity = 0.8;
         player = new Player(50, groundY - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT, selectedHeadImage); 
         player.isGrounded = true;
-        obstacles = [];
-        collectibles = [];
-        particles = []; 
-        score = 0;
-        gameSpeed = 5; 
-        isGameOver = false;
-        gameLoopId = null; 
-
+        obstacles = []; collectibles = []; particles = []; 
+        score = 0; gameSpeed = 5; isGameOver = false; gameLoopId = null; 
         scoreEl.innerText = 'Score: 0';
     }
 
     // --- 'initMenu' prépare le menu de démarrage ---
-    async function initMenu() { 
-        isReady = false; 
-        loadingText.innerText = "Chargement..."; 
-        
-        gameContainer.classList.remove('in-game');
-        
+    async function initMenu() { /* ... (inchangée, retire la classe in-game) ... */ 
+        isReady = false; loadingText.innerText = "Chargement..."; 
+        // Retiré : gameContainer.classList.remove('in-game'); -> Géré dans initGameData
         await initGameData(); 
-
-        gameOverScreenEl.style.display = 'none';
-        startScreenEl.style.display = 'flex'; 
-        
-        isReady = true; 
-        loadingText.innerText = "Appuyez pour commencer"; 
+        gameOverScreenEl.style.display = 'none'; startScreenEl.style.display = 'flex'; 
+        isReady = true; loadingText.innerText = "Appuyez pour commencer"; 
     }
 
     // --- Démarrage du jeu ---
-    function startGame() {
+    function startGame() { /* ... (inchangée, ajoute la classe in-game) ... */ 
         if (gameLoopId || !isReady) return; 
-        
-        gameContainer.classList.add('in-game'); 
-        
-        startScreenEl.style.display = 'none';
-        gameOverScreenEl.style.display = 'none';
-        
+        // Retiré : gameContainer.classList.add('in-game'); -> Fait dans handleInput
+        startScreenEl.style.display = 'none'; gameOverScreenEl.style.display = 'none';
         var promise = currentMusic.play();
         if (promise !== undefined) promise.catch(e => console.log("Musique bloquée:", e));
-        
         gameLoopId = requestAnimationFrame(gameLoop);
     }
 
     // --- Boucle de jeu principale ---
-    let obstacleTimer = 0; 
-    let collectibleTimer = 150; 
-    const OBSTACLE_SPAWN_INTERVAL = 90; 
-
-    function gameLoop() {
-        if (isGameOver) {
-             cancelAnimationFrame(gameLoopId);
-             gameLoopId = null;
-             return;
-        }
-
+    let obstacleTimer = 0; let collectibleTimer = 150; const OBSTACLE_SPAWN_INTERVAL = 90; 
+    function gameLoop() { /* ... (inchangée) ... */
+        if (isGameOver) { cancelAnimationFrame(gameLoopId); gameLoopId = null; return; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
         const dayNightProgress = (score % 500) / 500; 
         const nightOpacity = Math.sin(dayNightProgress * Math.PI) * 0.7; 
-        ctx.fillStyle = `rgba(0, 0, 50, ${nightOpacity})`;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#666';
-        ctx.fillRect(0, groundY, canvas.width, 70); 
-        
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.update();
-            p.draw();
-            if (p.life <= 0) {
-                particles.splice(i, 1);
-            }
-        }
-        
+        ctx.fillStyle = `rgba(0, 0, 50, ${nightOpacity})`; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#666'; ctx.fillRect(0, groundY, canvas.width, 70); 
+        for (let i = particles.length - 1; i >= 0; i--) { let p = particles[i]; p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1); }
         player.update(); 
-
-        obstacleTimer++;
-        collectibleTimer++;
-        
+        obstacleTimer++; collectibleTimer++;
         let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 40); 
-        
-        if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { 
-            const cactusImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-            let w = 50; 
-            let h = (cactusImg.height / cactusImg.width) * w;
-            if (h > 80) { h = 80; w = (cactusImg.width / cactusImg.height) * h; }
-            obstacles.push(new Obstacle(canvas.width, groundY - h, cactusImg, w, h));
-            obstacleTimer = 0 - (Math.random() * 20); 
-        }
-        
-        if (collectibleTimer > 200 && collectibleImages.length > 0) { 
-            const noteImg = collectibleImages[0];
-            const y = groundY - 120 - (Math.random() * 100); 
-            collectibles.push(new Collectible(canvas.width, y, noteImg, 30, 30));
-            collectibleTimer = 0;
-        }
-
-        for (let i = collectibles.length - 1; i >= 0; i--) {
-            let coll = collectibles[i];
-            coll.update();
-            if (
-                player.x < coll.x + coll.w && player.x + player.w > coll.x &&
-                player.y < coll.y + coll.h && player.y + player.h > coll.y
-            ) {
-                updateScore(10); 
-                collectibles.splice(i, 1); 
-            } 
-            else if (coll.x + coll.w < 0) {
-                collectibles.splice(i, 1);
-            }
-        }
-        
-        for (let i = obstacles.length - 1; i >= 0; i--) {
-            let obs = obstacles[i];
-            obs.update();
-            
-            const playerHitbox = {x: player.x + 5, y: player.y + 5, w: player.w - 10, h: player.h - 10};
-            const obsHitbox = {x: obs.x + 5, y: obs.y + 5, w: obs.w - 10, h: obs.h - 10};
-
-            if (
-                playerHitbox.x < obsHitbox.x + obsHitbox.w &&
-                playerHitbox.x + playerHitbox.w > obsHitbox.x &&
-                playerHitbox.y < obs.y + obs.h && 
-                playerHitbox.y + playerHitbox.h > obs.y
-            ) {
-               endGame();
-               return; 
-            }
-            
-            if (obs.x + obs.w < 0) {
-                obstacles.splice(i, 1);
-                updateScore(1); 
-            }
-        }
-        
+        if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { const cactusImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)]; let w = 50; let h = (cactusImg.height / cactusImg.width) * w; if (h > 80) { h = 80; w = (cactusImg.width / cactusImg.height) * h; } obstacles.push(new Obstacle(canvas.width, groundY - h, cactusImg, w, h)); obstacleTimer = 0 - (Math.random() * 20); }
+        if (collectibleTimer > 200 && collectibleImages.length > 0) { const noteImg = collectibleImages[0]; const y = groundY - 120 - (Math.random() * 100); collectibles.push(new Collectible(canvas.width, y, noteImg, 30, 30)); collectibleTimer = 0; }
+        for (let i = collectibles.length - 1; i >= 0; i--) { let coll = collectibles[i]; coll.update(); if (player.x < coll.x + coll.w && player.x + player.w > coll.x && player.y < coll.y + coll.h && player.y + player.h > coll.y) { updateScore(10); collectibles.splice(i, 1); } else if (coll.x + coll.w < 0) collectibles.splice(i, 1); }
+        for (let i = obstacles.length - 1; i >= 0; i--) { let obs = obstacles[i]; obs.update(); const playerHitbox = {x: player.x + 5, y: player.y + 5, w: player.w - 10, h: player.h - 10}; const obsHitbox = {x: obs.x + 5, y: obs.y + 5, w: obs.w - 10, h: obs.h - 10}; if (playerHitbox.x < obsHitbox.x + obsHitbox.w && playerHitbox.x + playerHitbox.w > obsHitbox.x && playerHitbox.y < obs.y + obs.h && playerHitbox.y + playerHitbox.h > obs.y) { endGame(); return; } if (obs.x + obs.w < 0) { obstacles.splice(i, 1); updateScore(1); } }
         gameSpeed += 0.003; 
-        
-        if (!isGameOver) {
-             gameLoopId = requestAnimationFrame(gameLoop);
-        }
+        if (!isGameOver) gameLoopId = requestAnimationFrame(gameLoop);
     }
 
-    function updateScore(value = 1) {
-        score += value;
-        scoreEl.innerText = `Score: ${Math.floor(score)}`; 
+    function updateScore(value = 1) { /* ... (inchangée) ... */ 
+        score += value; scoreEl.innerText = `Score: ${Math.floor(score)}`; 
     }
 
     // --- Fin de partie ---
-    function endGame() {
+    function endGame() { /* ... (inchangée) ... */
         if (isGameOver) return; 
-        
-        isGameOver = true;
-        if (gameLoopId) {
-             cancelAnimationFrame(gameLoopId); 
-             gameLoopId = null; 
-        }
-        
-        if (currentMusic) {
-            currentMusic.pause();
-            currentMusic.currentTime = 0; 
-        }
-        
-        finalScoreEl.innerText = Math.floor(score);
-        gameOverScreenEl.style.display = 'flex'; 
-
-        gameContainer.classList.add('shake');
-        setTimeout(() => {
-            gameContainer.classList.remove('shake');
-        }, 300);
+        isGameOver = true; if (gameLoopId) { cancelAnimationFrame(gameLoopId); gameLoopId = null; }
+        if (currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; }
+        finalScoreEl.innerText = Math.floor(score); gameOverScreenEl.style.display = 'flex'; 
+        gameContainer.classList.add('shake'); setTimeout(() => { gameContainer.classList.remove('shake'); }, 300);
     }
 
     // --- 'resetGame' retourne au menu ---
-    async function resetGame() {
-        isGameOver = true; // S'assurer que le jeu est bien arrêté
+    async function resetGame() { /* ... (inchangée) ... */
+        isGameOver = true; 
         await initMenu(); 
     }
     
     // --- 'handleInput' gère tous les taps ---
-    async function handleInput(e) {
+    async function handleInput(e) { /* ... (inchangée) ... */
         if(e) e.preventDefault();
-        
         if (!isReady) return; 
-
         if (isGameOver) {
             await resetGame(); 
         } else {
             if (!gameLoopId) {
+                 // Ajoute la classe in-game JUSTE avant de démarrer
+                 gameContainer.classList.add('in-game');
                 startGame(); 
             }
             player.jump(); 
