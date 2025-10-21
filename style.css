@@ -71,7 +71,7 @@ canvas {
     
     display: flex; 
     flex-direction: column;
-    gap: 10px; /* Réduit l'espacement */
+    gap: 10px; 
 }
 
 #gameOverScreen {
@@ -87,18 +87,18 @@ canvas {
     width: 100%; 
     max-width: 300px; 
     height: auto;   
-    margin: 0 auto 5px auto; /* Moins d'espace en dessous */
+    margin: 0 auto 5px auto; 
 }
 
 #loadingText {
     font-size: 1.2em;
     font-weight: bold;
-    margin-bottom: 10px; /* Espace avant les explications */
+    margin-bottom: 10px; 
 }
 
 /* Styles pour la section explications */
 #powerUpExplanation {
-    border-top: 1px solid #ccc; /* Séparateur */
+    border-top: 1px solid #ccc; 
     padding-top: 10px;
     margin-top: 5px;
     text-align: left;
@@ -112,15 +112,15 @@ canvas {
 }
 
 .power-up-item {
-    display: flex; /* Aligne icône et texte */
-    align-items: center; /* Centre verticalement */
+    display: flex; 
+    align-items: center; 
     margin-bottom: 5px;
 }
 
 .power-up-icon {
-    width: 25px;  /* Petite icône */
+    width: 25px;  
     height: auto;
-    margin-right: 10px; /* Espace entre icône et texte */
+    margin-right: 10px; 
 }
 
 .power-up-desc {
@@ -141,22 +141,24 @@ canvas {
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
-/* Styles pour l'affichage des bonus en jeu */
+/* --- MODIFIÉ V1.7 : Styles pour l'affichage des bonus (centré) --- */
 #powerUpInfo {
     position: absolute;
-    top: 60px; /* Sous le score */
-    left: 20px;
+    top: 20%; /* Positionné vers le haut/centre */
+    left: 50%; /* Centré horizontalement */
+    transform: translateX(-50%); /* Ajustement précis du centrage */
     z-index: 10;
     color: #FFFFFF;
     text-shadow: 2px 2px 4px #000000;
-    font-size: 1.2em;
+    font-size: 1.4em; /* Un peu plus grand */
     font-weight: bold;
-    text-align: left;
-    max-width: calc(100% - 40px); 
+    text-align: center; /* Texte centré */
+    width: 80%; /* Prend une bonne largeur */
+    pointer-events: none; /* Pour ne pas bloquer les clics */
 }
 
 #powerUpText {
-    margin-bottom: 5px;
+    margin-bottom: 8px; /* Plus d'espace */
     opacity: 1;
     transition: opacity 0.5s ease-out;
 }
@@ -165,6 +167,7 @@ canvas {
 }
 
 #powerUpTimer {
-    font-size: 1em;
+    font-size: 1.1em; /* Un peu plus grand */
     color: #FFD700; 
 }
+/* --- FIN MODIFICATION --- */
