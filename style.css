@@ -27,15 +27,12 @@ body {
     background-repeat: no-repeat; 
 }
 
-/* --- MODIFICATION POUR LE PLEIN ÉCRAN --- */
+/* Canvas en plein écran */
 canvas {
     background-color: transparent; 
-    /* Force le canvas à prendre tout l'écran */
     width: 100vw;
     height: 100vh;
-    /* On supprime les 'max-width' et 'max-height' */
 }
-/* --- FIN MODIFICATION --- */
 
 #score {
     position: absolute;
@@ -81,28 +78,21 @@ canvas {
     margin: 0 auto 10px auto; 
 }
 
-.menu-btn {
-    padding: 12px;
+#loadingText {
     font-size: 1.2em;
     font-weight: bold;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
 }
 
-#level1Btn {
-    background-color: #28a745; 
-}
-#level1Btn:hover {
-    background-color: #218838;
+/* --- IDÉE 3 : ANIMATION DE SECOUSSE --- */
+.shake {
+    animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+    transform: translate3d(0, 0, 0);
 }
 
-#level2Btn {
-    background-color: #dc3545; 
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
 }
-#level2Btn:hover {
-    background-color: #c82333;
-}
-/* L'accolade en trop était ICI. Je l'ai supprimée. */
+/* --- FIN IDÉE 3 --- */
