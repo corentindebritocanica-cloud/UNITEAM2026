@@ -117,11 +117,13 @@ canvas {
     margin-bottom: 5px;
 }
 
+/* --- MODIFIÉ V1.7 : Icônes plus grandes dans le menu --- */
 .power-up-icon {
-    width: 25px;  
+    width: 35px;  /* Augmenté de 25px */
     height: auto;
     margin-right: 10px; 
 }
+/* --- FIN MODIFICATION --- */
 
 .power-up-desc {
     font-size: 0.9em;
@@ -141,24 +143,24 @@ canvas {
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
-/* --- MODIFIÉ V1.7 : Styles pour l'affichage des bonus (centré) --- */
+/* Styles pour l'affichage des bonus en jeu (centré) */
 #powerUpInfo {
     position: absolute;
-    top: 20%; /* Positionné vers le haut/centre */
-    left: 50%; /* Centré horizontalement */
-    transform: translateX(-50%); /* Ajustement précis du centrage */
+    top: 20%; 
+    left: 50%; 
+    transform: translateX(-50%); 
     z-index: 10;
     color: #FFFFFF;
     text-shadow: 2px 2px 4px #000000;
-    font-size: 1.4em; /* Un peu plus grand */
+    font-size: 1.4em; 
     font-weight: bold;
-    text-align: center; /* Texte centré */
-    width: 80%; /* Prend une bonne largeur */
-    pointer-events: none; /* Pour ne pas bloquer les clics */
+    text-align: center; 
+    width: 80%; 
+    pointer-events: none; 
 }
 
 #powerUpText {
-    margin-bottom: 8px; /* Plus d'espace */
+    margin-bottom: 8px; 
     opacity: 1;
     transition: opacity 0.5s ease-out;
 }
@@ -167,7 +169,6 @@ canvas {
 }
 
 #powerUpTimer {
-    font-size: 1.1em; /* Un peu plus grand */
+    font-size: 1.1em; 
     color: #FFD700; 
 }
-/* --- FIN MODIFICATION --- */

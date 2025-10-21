@@ -57,6 +57,7 @@ window.addEventListener('load', () => {
         'perso11.png', 'perso12.png', 'perso13.png', 'perso14.png', 'perso15.png',
         'perso16.png', 'perso17.png', 'perso18.png'
     ];
+    // Utilise .PNG pour les power-ups
     const powerUpImagePaths = {
         invincible: 'chapeau.PNG',
         superJump: 'botte.PNG',
@@ -85,21 +86,21 @@ window.addEventListener('load', () => {
     // --- CLASSE COLLECTIBLE ---
     class Collectible { /* ... (inchangée) ... */ }
 
-    // --- CLASSE POWERUP (Modifiée) ---
+    // --- CLASSE POWERUP (Taille modifiée) ---
     class PowerUp { 
         constructor(x, y, type) {
             this.type = type; this.image = powerUpImages[type];
             if (!this.image) return null; 
             // --- MODIFIÉ V1.7 : Taille augmentée ---
             this.w = 60; // Plus large (était 40)
-            this.h = (this.image.height / this.image.width) * this.w; // Hauteur proportionnelle
+            this.h = (this.image.height / this.image.width) * this.w; 
             // --- FIN MODIFICATION ---
             this.x = x; this.y = y; this.initialY = y; this.angle = Math.random() * Math.PI * 2;
         }
         draw() { if (this.image) ctx.drawImage(this.image, this.x, this.y, this.w, this.h); }
         update() {
             this.x -= gameSpeed; this.angle += 0.05;
-            this.y = this.initialY + Math.sin(this.angle) * 15; // Oscillation
+            this.y = this.initialY + Math.sin(this.angle) * 15; 
             this.draw();
         }
     }
@@ -125,7 +126,7 @@ window.addEventListener('load', () => {
     let obstacleTimer = 0; let collectibleTimer = 150; 
     const OBSTACLE_SPAWN_INTERVAL = 100; 
 
-    function gameLoop(currentTime) { /* ... (inchangée, contient la logique d'apparition par score) ... */ }
+    function gameLoop(currentTime) { /* ... (inchangée) ... */ }
 
     // --- Update Score (vérifie seuil bonus) ---
     function updateScore(value = 1) { /* ... (inchangée) ... */ }
