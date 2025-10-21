@@ -140,34 +140,4 @@ canvas {
   20%, 80% { transform: translate3d(2px, 0, 0); }
   30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
   40%, 60% { transform: translate3d(4px, 0, 0); }
-}
-
-/* Styles pour l'affichage des bonus en jeu (centré) */
-#powerUpInfo {
-    position: absolute;
-    top: 20%; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    z-index: 10;
-    color: #FFFFFF;
-    text-shadow: 2px 2px 4px #000000;
-    font-size: 1.4em; 
-    font-weight: bold;
-    text-align: center; 
-    width: 80%; 
-    pointer-events: none; 
-}
-
-#powerUpText {
-    margin-bottom: 8px; 
-    opacity: 1;
-    transition: opacity 0.5s ease-out;
-}
-#powerUpText.fade-out {
-    opacity: 0;
-}
-
-#powerUpTimer {
-    font-size: 1.1em; 
-    color: #FFD700; 
-}
+} /* <-- The file MUST end exactly here */
