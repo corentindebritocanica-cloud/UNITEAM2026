@@ -72,8 +72,6 @@ canvas {
     display: flex; 
     flex-direction: column;
     gap: 15px;
-    
-    padding-top: 100px; /* Espace pour le logo au-dessus */
 }
 
 #gameOverScreen {
@@ -84,31 +82,12 @@ canvas {
     color: #dc3545;
 }
 
-/* Style et animation du logo */
+/* Logo (simple, centré dans le menu) */
 #gameLogo {
-    position: absolute;
-    z-index: 25; 
-    
-    /* État 1 : Au centre (Menu) */
-    width: 90%; 
+    width: 100%; 
     max-width: 300px; 
-    height: auto;
-    top: 30%; 
-    left: 50%;
-    transform: translateX(-50%);
-    
-    transition: all 0.8s cubic-bezier(0.68, -0.55, 0.26, 1.55);
-}
-
-/* État 2 : En jeu (en haut à droite) */
-.game-container.in-game #gameLogo {
-    top: 20px;
-    left: auto; 
-    right: 20px;
-    width: 120px; 
-    max-width: 120px;
-    transform: translateX(0); 
-    z-index: 15; 
+    height: auto;   
+    margin: 0 auto 10px auto; 
 }
 
 #loadingText {
@@ -128,4 +107,34 @@ canvas {
   30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
-/* --- FIN IDÉE 3 --- */
+
+/* Styles pour l'affichage des bonus */
+#powerUpInfo {
+    position: absolute;
+    top: 60px; /* Sous le score */
+    left: 20px;
+    z-index: 10;
+    color: #FFFFFF;
+    text-shadow: 2px 2px 4px #000000;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: left;
+    /* Pour que le texte ne soit pas trop large */
+    max-width: calc(100% - 40px); 
+}
+
+#powerUpText {
+    margin-bottom: 5px;
+    /* Animation simple d'apparition/disparition */
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
+#powerUpText.fade-out {
+    opacity: 0;
+}
+
+
+#powerUpTimer {
+    font-size: 1em;
+    color: #FFD700; /* Couleur dorée pour le timer */
+}

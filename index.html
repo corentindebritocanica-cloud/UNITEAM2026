@@ -9,15 +9,14 @@
 <body>
 
     <div class="game-container">
-        <div id="version">V1.2</div> 
+        <div id="version">V1.3</div> 
 
         <div id="score">Score: 0</div>
         
-        <img src="uniteamadventure.png" alt="UNITEAM ADVENTURE" id="gameLogo">
-
         <canvas id="gameCanvas"></canvas>
         
         <div id="startScreen">
+             <img src="uniteamadventure.png" alt="UNITEAM ADVENTURE" id="gameLogo">
             <p id="loadingText">Chargement...</p>
         </div>
 
@@ -26,6 +25,12 @@
             <p>Score final: <span id="finalScore">0</span></p>
             <p>Appuyez pour recommencer</p>
         </div>
+
+        <div id="powerUpInfo">
+            <div id="powerUpText"></div>
+            <div id="powerUpTimer"></div>
+        </div>
+
     </div>
 
     <script src="game.js"></script>
