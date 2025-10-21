@@ -29,7 +29,7 @@ window.addEventListener('load', () => {
     let powerUpDuration = 5; 
     let powerUpSpawnTimer = 0; 
     let isPowerUpActive = false; 
-    let powerUpTextTimeout = null; // Pour gérer le fondu du texte bonus
+    let powerUpTextTimeout = null; 
     
     let weatherEffect = null; 
     let weatherTimer = 0;
@@ -71,11 +71,9 @@ window.addEventListener('load', () => {
     // Fonction pour charger TOUTES les images
     function loadGameImages() {
         return new Promise(resolve => {
-            // Optimisation : Si tout est déjà chargé, on sort
             if (imagesLoadedCount === totalImages && playerHeadImages.length > 0) { 
                  resolve(); return; 
             }
-            // Réinitialisation si ce n'est pas la première fois
             imagesLoadedCount = 0; 
             playerHeadImages.length = 0; obstacleImages.length = 0; collectibleImages.length = 0;
             Object.keys(powerUpImages).forEach(key => delete powerUpImages[key]); 
@@ -164,13 +162,13 @@ window.addEventListener('load', () => {
         }
     }
     
-    // --- CLASSE OBSTACLE ---
+    // --- CLASSE OBSTACLE (Ajustée) ---
     class Obstacle { 
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w || image.width; this.h = h || image.height;
             this.image = image; this.initialY = y;
-            this.verticalSpeed = (Math.random() < 0.2) ? (Math.random() * 1 - 0.5) : 0; 
-            this.verticalRange = 20;
+            this.verticalSpeed = (Math.random() < 0.1) ? (Math.random() * 0.8 - 0.4) : 0; // Moins mobiles
+            this.verticalRange = 15;
         }
         draw() { ctx.drawImage(this.image, this.x, this.y, this.w, this.h); }
         update() { 
@@ -218,25 +216,25 @@ window.addEventListener('load', () => {
         }
     }
 
-     // --- CLASSE BACKGROUND CHARACTER ---
+     // --- CLASSE BACKGROUND CHARACTER (Ajustée) ---
     class BackgroundCharacter {
         constructor(image, scale) {
             this.image = image; this.scale = scale; 
-            this.w = PLAYER_WIDTH * this.scale * 0.8; this.h = PLAYER_HEIGHT * this.scale * 0.8;
+            this.w = PLAYER_WIDTH * this.scale; this.h = PLAYER_HEIGHT * this.scale;
             this.x = canvas.width + Math.random() * canvas.width; 
             this.baseY = groundY - this.h - Math.random() * 20; this.y = this.baseY;
-            this.speed = gameSpeed * (0.1 + (scale - 0.2) * 0.3); 
+            this.speed = gameSpeed * (0.1 + (scale - 0.3) * 0.3); 
             this.bounceAngle = Math.random() * Math.PI * 2; 
             this.bounceSpeed = 0.05 + Math.random() * 0.03;
         }
         draw() {
-             ctx.globalAlpha = 0.4 + (this.scale - 0.2) * 0.5; 
+             ctx.globalAlpha = 0.4 + (this.scale - 0.3) * 0.5; 
              ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
              ctx.globalAlpha = 1.0;
         }
         update() {
             this.x -= this.speed;
-            this.speed = gameSpeed * (0.1 + (this.scale - 0.2) * 0.3); 
+            this.speed = gameSpeed * (0.1 + (this.scale - 0.3) * 0.3); 
             this.bounceAngle += this.bounceSpeed;
             this.y = this.baseY + Math.sin(this.bounceAngle) * 5; 
             this.draw();
@@ -265,23 +263,20 @@ window.addEventListener('load', () => {
         scoreEl.innerText = 'Score: 0';
         powerUpTextEl.innerText = ''; powerUpTimerEl.innerText = '';
 
+         // Tous les personnages en fond
          if (playerHeadImages.length > 0) {
-             const availableHeads = [...playerHeadImages]; 
-             for (let i = 0; i < 5; i++) { 
-                 if (availableHeads.length === 0) break; 
-                 const headIndex = Math.floor(Math.random() * availableHeads.length);
-                 const headImage = availableHeads.splice(headIndex, 1)[0]; 
-                 const scale = Math.random() * 0.3 + 0.2; 
+             playerHeadImages.forEach(headImage => { 
+                 const scale = Math.random() * 0.3 + 0.3; // Taille 0.3 - 0.6
                  backgroundCharacters.push(new BackgroundCharacter(headImage, scale));
-             }
-             backgroundCharacters.sort((a, b) => a.scale - b.scale);
+             });
+             backgroundCharacters.sort((a, b) => a.scale - b.scale); 
          }
     }
 
     // --- 'initMenu' prépare le menu ---
     async function initMenu() { 
         isReady = false; loadingText.innerText = "Chargement..."; 
-        // gameContainer.classList.remove('in-game'); // Plus besoin avec logo fixe
+        // gameContainer.classList.remove('in-game'); // Retiré car logo fixe
         await initGameData(); 
         gameOverScreenEl.style.display = 'none'; startScreenEl.style.display = 'flex'; 
         isReady = true; loadingText.innerText = "Appuyez pour commencer"; 
@@ -290,11 +285,11 @@ window.addEventListener('load', () => {
     // --- Démarrage du jeu ---
     function startGame() { 
         if (gameLoopId || !isReady) return; 
-        // gameContainer.classList.add('in-game'); // Plus besoin
+        // gameContainer.classList.add('in-game'); // Retiré
         startScreenEl.style.display = 'none'; gameOverScreenEl.style.display = 'none';
         var promise = currentMusic.play();
         if (promise !== undefined) promise.catch(e => console.log("Musique bloquée:", e));
-        lastTime = performance.now(); // Initialiser lastTime pour deltaTime
+        lastTime = performance.now(); 
         gameLoopId = requestAnimationFrame(gameLoop);
     }
 
@@ -302,18 +297,13 @@ window.addEventListener('load', () => {
     function activatePowerUp(type) {
         if (isPowerUpActive) return; 
         isPowerUpActive = true; activePowerUp = type; powerUpTimer = powerUpDuration; 
-        
-        // Gérer le texte et son fondu
-        clearTimeout(powerUpTextTimeout); // Annule le fondu précédent
-        powerUpTextEl.classList.remove('fade-out'); // Assure la visibilité
-        powerUpTextEl.innerText = ''; // Efface
-        
+        clearTimeout(powerUpTextTimeout); powerUpTextEl.classList.remove('fade-out'); 
+        powerUpTextEl.innerText = ''; 
         switch(type) {
             case 'invincible': player.isInvincible = true; powerUpTextEl.innerText = "Invincible !"; break;
             case 'superJump': player.jumpPower = player.baseJumpPower * 1.5; powerUpTextEl.innerText = "Super Saut !"; break;
             case 'magnet': powerUpTextEl.innerText = "Aimant à Notes !"; break;
         }
-        // Lance le fondu après 2 secondes
         powerUpTextTimeout = setTimeout(() => { powerUpTextEl.classList.add('fade-out'); }, 2000); 
     }
 
@@ -326,12 +316,14 @@ window.addEventListener('load', () => {
         }
         isPowerUpActive = false; activePowerUp = null; powerUpTimer = 0;
         powerUpTextEl.innerText = ''; powerUpTimerEl.innerText = '';
-        powerUpTextEl.classList.remove('fade-out'); // Reset pour la prochaine fois
-        clearTimeout(powerUpTextTimeout); // Annule le timer de fondu s'il était en cours
+        powerUpTextEl.classList.remove('fade-out'); 
+        clearTimeout(powerUpTextTimeout); 
     }
     
     // --- Boucle de jeu principale ---
-    let obstacleTimer = 0; let collectibleTimer = 150; const OBSTACLE_SPAWN_INTERVAL = 90; 
+    let obstacleTimer = 0; let collectibleTimer = 150; 
+    const OBSTACLE_SPAWN_INTERVAL = 100; // Un peu plus espacé
+
     function gameLoop(currentTime) { 
         if (isGameOver) { cancelAnimationFrame(gameLoopId); gameLoopId = null; return; }
 
@@ -357,16 +349,16 @@ window.addEventListener('load', () => {
 
         // Timers apparition
         obstacleTimer++; collectibleTimer++; powerUpSpawnTimer++;
-        let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 40); 
+        let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 45); 
         
         // Apparition Obstacles
         if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { 
             const cactusImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
             let w = 50; let h = (cactusImg.height / cactusImg.width) * w; if (h > 80) { h = 80; w = (cactusImg.width / cactusImg.height) * h; } 
             obstacles.push(new Obstacle(canvas.width, groundY - h, cactusImg, w, h));
-            if (Math.random() < 0.2) { 
+            if (Math.random() < 0.1) { // Moins de paires
                  const cactusImg2 = obstacleImages[Math.floor(Math.random() * obstacleImages.length)]; let w2 = 40; let h2 = (cactusImg2.height / cactusImg2.width) * w2; if (h2 > 60) h2 = 60;
-                 obstacles.push(new Obstacle(canvas.width + w + 80 + Math.random() * 50, groundY - h2, cactusImg2, w2, h2)); 
+                 obstacles.push(new Obstacle(canvas.width + w + 90 + Math.random() * 60, groundY - h2, cactusImg2, w2, h2)); 
             }
             obstacleTimer = 0 - (Math.random() * 20); 
         }
@@ -374,15 +366,15 @@ window.addEventListener('load', () => {
         // Apparition Collectibles
         if (collectibleTimer > 200 && collectibleImages.length > 0) { const noteImg = collectibleImages[0]; const y = groundY - 120 - (Math.random() * 100); collectibles.push(new Collectible(canvas.width, y, noteImg, 30, 30)); collectibleTimer = 0; }
 
-        // Apparition Power-Ups
-        if (!isPowerUpActive && powerUpSpawnTimer > 400 && Object.keys(powerUpImages).length > 0) { const types = Object.keys(powerUpImages); const randomType = types[Math.floor(Math.random() * types.length)]; const y = groundY - 80 - (Math.random() * 80); const newPowerUp = new PowerUp(canvas.width, y, randomType); if (newPowerUp && newPowerUp.image) powerUps.push(newPowerUp); powerUpSpawnTimer = 0; }
+        // Apparition Power-Ups (plus rapide au début)
+        if (!isPowerUpActive && powerUpSpawnTimer > 250 && Object.keys(powerUpImages).length > 0) { const types = Object.keys(powerUpImages); const randomType = types[Math.floor(Math.random() * types.length)]; const y = groundY - 80 - (Math.random() * 80); const newPowerUp = new PowerUp(canvas.width, y, randomType); if (newPowerUp && newPowerUp.image) powerUps.push(newPowerUp); powerUpSpawnTimer = 0 - (Math.random() * 100); }
 
         // Màj & Collisions Power-Ups
         for (let i = powerUps.length - 1; i >= 0; i--) { 
             let pu = powerUps[i]; pu.update(); 
             if (player.x < pu.x + pu.w && player.x + player.w > pu.x && player.y < pu.y + pu.h && player.y + player.h > pu.y) { 
                  activatePowerUp(pu.type); 
-                 for(let k=0; k<10; k++) player.emitParticles('#FFD700'); // Paillettes dorées
+                 for(let k=0; k<10; k++) player.emitParticles('#FFD700'); 
                  powerUps.splice(i, 1); 
             } else if (pu.x + pu.w < 0) powerUps.splice(i, 1); 
         }
@@ -392,7 +384,7 @@ window.addEventListener('load', () => {
             let coll = collectibles[i]; coll.update(); 
             if (player.x < coll.x + coll.w && player.x + player.w > coll.x && player.y < coll.y + coll.h && player.y + player.h > coll.y) { 
                  updateScore(10); 
-                 for(let k=0; k<5; k++) player.emitParticles(); // Paillettes normales
+                 for(let k=0; k<5; k++) player.emitParticles(); 
                  collectibles.splice(i, 1); 
             } else if (coll.x + coll.w < 0) collectibles.splice(i, 1); 
         }

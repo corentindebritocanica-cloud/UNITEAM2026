@@ -71,7 +71,7 @@ canvas {
     
     display: flex; 
     flex-direction: column;
-    gap: 15px;
+    gap: 10px; /* Réduit l'espacement */
 }
 
 #gameOverScreen {
@@ -87,12 +87,45 @@ canvas {
     width: 100%; 
     max-width: 300px; 
     height: auto;   
-    margin: 0 auto 10px auto; 
+    margin: 0 auto 5px auto; /* Moins d'espace en dessous */
 }
 
 #loadingText {
     font-size: 1.2em;
     font-weight: bold;
+    margin-bottom: 10px; /* Espace avant les explications */
+}
+
+/* Styles pour la section explications */
+#powerUpExplanation {
+    border-top: 1px solid #ccc; /* Séparateur */
+    padding-top: 10px;
+    margin-top: 5px;
+    text-align: left;
+}
+
+#powerUpExplanation h3 {
+    font-size: 1em;
+    margin-bottom: 8px;
+    text-align: center;
+    color: #555;
+}
+
+.power-up-item {
+    display: flex; /* Aligne icône et texte */
+    align-items: center; /* Centre verticalement */
+    margin-bottom: 5px;
+}
+
+.power-up-icon {
+    width: 25px;  /* Petite icône */
+    height: auto;
+    margin-right: 10px; /* Espace entre icône et texte */
+}
+
+.power-up-desc {
+    font-size: 0.9em;
+    color: #333;
 }
 
 /* Animation de secousse */
@@ -108,7 +141,7 @@ canvas {
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
-/* Styles pour l'affichage des bonus */
+/* Styles pour l'affichage des bonus en jeu */
 #powerUpInfo {
     position: absolute;
     top: 60px; /* Sous le score */
@@ -119,13 +152,11 @@ canvas {
     font-size: 1.2em;
     font-weight: bold;
     text-align: left;
-    /* Pour que le texte ne soit pas trop large */
     max-width: calc(100% - 40px); 
 }
 
 #powerUpText {
     margin-bottom: 5px;
-    /* Animation simple d'apparition/disparition */
     opacity: 1;
     transition: opacity 0.5s ease-out;
 }
@@ -133,8 +164,7 @@ canvas {
     opacity: 0;
 }
 
-
 #powerUpTimer {
     font-size: 1em;
-    color: #FFD700; /* Couleur dorée pour le timer */
+    color: #FFD700; 
 }
