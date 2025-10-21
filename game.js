@@ -4,7 +4,9 @@ window.addEventListener('load', () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
+    // On récupère le conteneur principal
     const gameContainer = document.querySelector('.game-container');
+    
     const scoreEl = document.getElementById('score');
     const startScreenEl = document.getElementById('startScreen');
     const gameOverScreenEl = document.getElementById('gameOverScreen');
@@ -126,9 +128,8 @@ window.addEventListener('load', () => {
         update() { this.x -= gameSpeed; this.draw(); }
     }
 
-    // --- CORRECTION : 'initGameData' prépare une nouvelle partie (sans changer l'écran) ---
+    // --- 'initGameData' prépare une nouvelle partie ---
     async function initGameData() {
-        // S'assurer que la secousse est enlevée
         gameContainer.classList.remove('shake');
         
         if (currentMusic) {
@@ -137,21 +138,17 @@ window.addEventListener('load', () => {
             currentMusic = null;
         }
         
-        // Choisir une nouvelle musique
         const musicIndex = Math.floor(Math.random() * musicPaths.length);
         currentMusic = new Audio(musicPaths[musicIndex]);
         currentMusic.loop = true;
 
-        // Charger les images (seulement la première fois)
         if (playerHeadImages.length === 0) {
             await loadGameImages();
         }
         
-        // Choisir une nouvelle tête
         const randomIndex = Math.floor(Math.random() * playerHeadImages.length);
         selectedHeadImage = playerHeadImages.length > 0 ? playerHeadImages[randomIndex] : null;
 
-        // Réinitialiser les variables
         gravity = 0.8;
         player = new Player(50, groundY - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT, selectedHeadImage); 
         player.isGrounded = true;
@@ -160,20 +157,21 @@ window.addEventListener('load', () => {
         score = 0;
         gameSpeed = 5; 
         isGameOver = false;
-        gameLoopId = null; // Important
+        gameLoopId = null; 
 
         scoreEl.innerText = 'Score: 0';
     }
 
-    // --- CORRECTION : 'initMenu' prépare le menu de démarrage ---
+    // --- 'initMenu' prépare le menu de démarrage ---
     async function initMenu() { 
         isReady = false; 
         loadingText.innerText = "Chargement..."; 
         
-        // Prépare les données (charge les images, etc.)
+        // --- MODIFICATION : Retire la classe '.in-game' pour animer le logo ---
+        gameContainer.classList.remove('in-game');
+        
         await initGameData(); 
 
-        // Affiche le menu
         gameOverScreenEl.style.display = 'none';
         startScreenEl.style.display = 'flex';
         
@@ -183,17 +181,17 @@ window.addEventListener('load', () => {
 
     // --- Démarrage du jeu ---
     function startGame() {
-        if (gameLoopId) return; // Ne pas lancer si déjà lancé
+        if (gameLoopId) return; 
         
-        // Cacher les menus
+        // --- MODIFICATION : Ajoute la classe '.in-game' pour animer le logo ---
+        gameContainer.classList.add('in-game');
+        
         startScreenEl.style.display = 'none';
         gameOverScreenEl.style.display = 'none';
         
-        // Lancer la musique
         var promise = currentMusic.play();
         if (promise !== undefined) promise.catch(e => console.log("Musique bloquée"));
         
-        // Lancer la boucle
         gameLoopId = requestAnimationFrame(gameLoop);
     }
 
@@ -207,13 +205,11 @@ window.addEventListener('load', () => {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Cycle Jour/Nuit
         const dayNightProgress = (score % 500) / 500; 
         const nightOpacity = Math.sin(dayNightProgress * Math.PI) * 0.7; 
         ctx.fillStyle = `rgba(0, 0, 50, ${nightOpacity})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Sol
         ctx.fillStyle = '#666';
         ctx.fillRect(0, groundY, canvas.width, 70); 
         
@@ -224,7 +220,6 @@ window.addEventListener('load', () => {
         
         let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 40); 
         
-        // Apparition des obstacles
         if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { 
             const cactusImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
             let w = 50; 
@@ -234,7 +229,6 @@ window.addEventListener('load', () => {
             obstacleTimer = 0 - (Math.random() * 20); 
         }
         
-        // Apparition des collectibles (notes)
         if (collectibleTimer > 200 && collectibleImages.length > 0) { 
             const noteImg = collectibleImages[0];
             const y = groundY - 120 - (Math.random() * 100); 
@@ -242,7 +236,6 @@ window.addEventListener('load', () => {
             collectibleTimer = 0;
         }
 
-        // Collisions Collectibles
         for (let i = collectibles.length - 1; i >= 0; i--) {
             let coll = collectibles[i];
             coll.update();
@@ -258,7 +251,6 @@ window.addEventListener('load', () => {
             }
         }
         
-        // Collisions Obstacles
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let obs = obstacles[i];
             obs.update();
@@ -296,7 +288,7 @@ window.addEventListener('load', () => {
         if (isGameOver) return;
         isGameOver = true;
         cancelAnimationFrame(gameLoopId); 
-        gameLoopId = null; // Important : signale que le jeu est arrêté
+        gameLoopId = null; 
         
         if (currentMusic) {
             currentMusic.pause();
@@ -304,33 +296,31 @@ window.addEventListener('load', () => {
         }
         
         finalScoreEl.innerText = Math.floor(score);
-        gameOverScreenEl.style.display = 'flex'; // Affiche l'écran de fin
+        gameOverScreenEl.style.display = 'flex'; 
 
-        // Déclenche la secousse
         gameContainer.classList.add('shake');
         setTimeout(() => {
             gameContainer.classList.remove('shake');
         }, 300);
     }
 
-    // --- CORRECTION : 'resetGame' relance le jeu directement ---
+    // --- CORRECTION : 'resetGame' retourne au menu ---
     async function resetGame() {
-        await initGameData(); // Prépare les données (nouvelle tête, score 0...)
-        startGame(); // Lance le jeu (cache l'écran Game Over, lance la boucle)
+        // Au lieu de relancer, on retourne au menu
+        await initMenu(); 
     }
     
-    // --- CORRECTION : 'handleInput' gère tous les taps ---
+    // --- 'handleInput' gère tous les taps ---
     async function handleInput(e) {
         if(e) e.preventDefault();
         
-        // Si le jeu charge, ne rien faire
         if (!isReady && !isGameOver) return; 
 
         if (isGameOver) {
-            // Si on est sur l'écran Game Over, on relance
+            // Si on est sur l'écran Game Over, on retourne au menu
             await resetGame(); 
         } else {
-            // Si on est sur le menu (jeu pas lancé)
+            // Si on est sur le menu
             if (!gameLoopId) {
                 startGame(); 
             }
@@ -339,7 +329,6 @@ window.addEventListener('load', () => {
         }
     }
     
-    // Écouteurs d'événements
     window.addEventListener('touchstart', handleInput, { passive: false });
     window.addEventListener('mousedown', handleInput);
     
