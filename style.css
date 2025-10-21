@@ -117,9 +117,8 @@ canvas {
     margin-bottom: 5px;
 }
 
-/* Icônes plus grandes dans le menu */
 .power-up-icon {
-    width: 35px;  /* Augmenté */
+    width: 25px;  
     height: auto;
     margin-right: 10px; 
 }
@@ -127,24 +126,6 @@ canvas {
 .power-up-desc {
     font-size: 0.9em;
     color: #333;
-}
-
-/* Style Bouton Admin */
-#adminBtn {
-    position: absolute; 
-    bottom: 10px;
-    right: 10px;
-    padding: 5px 8px;
-    font-size: 0.8em;
-    background-color: #6c757d; 
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    opacity: 0.7; 
-}
-#adminBtn:hover {
-    opacity: 1;
 }
 
 /* Animation de secousse */
@@ -160,24 +141,24 @@ canvas {
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
-/* Styles pour l'affichage des bonus en jeu (en haut à gauche) */
+/* --- MODIFIÉ V1.7 : Styles pour l'affichage des bonus (centré) --- */
 #powerUpInfo {
     position: absolute;
-    top: 60px; /* Sous le score */
-    left: 20px; /* Alignement à gauche */
+    top: 20%; /* Positionné vers le haut/centre */
+    left: 50%; /* Centré horizontalement */
+    transform: translateX(-50%); /* Ajustement précis du centrage */
     z-index: 10;
     color: #FFFFFF;
     text-shadow: 2px 2px 4px #000000;
-    font-size: 1.2em; /* Taille d'origine */
+    font-size: 1.4em; /* Un peu plus grand */
     font-weight: bold;
-    text-align: left; /* Texte aligné à gauche */
-    width: auto; /* Largeur automatique */
-    pointer-events: none; 
-    max-width: calc(100% - 40px); 
+    text-align: center; /* Texte centré */
+    width: 80%; /* Prend une bonne largeur */
+    pointer-events: none; /* Pour ne pas bloquer les clics */
 }
 
 #powerUpText {
-    margin-bottom: 5px; /* Espace d'origine */
+    margin-bottom: 8px; /* Plus d'espace */
     opacity: 1;
     transition: opacity 0.5s ease-out;
 }
@@ -186,6 +167,7 @@ canvas {
 }
 
 #powerUpTimer {
-    font-size: 1em; /* Taille d'origine */
+    font-size: 1.1em; /* Un peu plus grand */
     color: #FFD700; 
 }
+/* --- FIN MODIFICATION --- */
