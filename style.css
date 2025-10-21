@@ -21,18 +21,21 @@ body {
     align-items: center;
     position: relative;
     
-    /* Fond d'écran Western */
     background-image: url('FOND DE PLAN.jpg'); 
     background-size: cover; 
     background-position: center; 
     background-repeat: no-repeat; 
 }
 
+/* --- MODIFICATION POUR LE PLEIN ÉCRAN --- */
 canvas {
     background-color: transparent; 
-    max-width: 100%;
-    max-height: 100%;
+    /* Force le canvas à prendre tout l'écran */
+    width: 100vw;
+    height: 100vh;
+    /* On supprime les 'max-width' et 'max-height' */
 }
+/* --- FIN MODIFICATION --- */
 
 #score {
     position: absolute;
@@ -64,23 +67,20 @@ canvas {
 }
 
 #gameOverScreen {
-    display: none; /* Caché par défaut */
+    display: none; 
 }
 
-/* Style pour le "Game Over" */
 #gameOverScreen h1 {
     color: #dc3545;
 }
 
-/* Style pour le logo dans le menu */
 #gameLogo {
-    width: 100%; /* Le logo prend toute la largeur de la boîte */
-    max-width: 300px; /* Mais pas plus de 300px */
-    height: auto;   /* Garde les proportions */
-    margin: 0 auto 10px auto; /* Centré et espace en dessous */
+    width: 100%; 
+    max-width: 300px; 
+    height: auto;   
+    margin: 0 auto 10px auto; 
 }
 
-/* Styles pour les boutons du menu */
 .menu-btn {
     padding: 12px;
     font-size: 1.2em;
@@ -93,14 +93,14 @@ canvas {
 }
 
 #level1Btn {
-    background-color: #28a745; /* Vert */
+    background-color: #28a745; 
 }
 #level1Btn:hover {
     background-color: #218838;
 }
 
 #level2Btn {
-    background-color: #dc3545; /* Rouge */
+    background-color: #dc3545; 
 }
 #level2Btn:hover {
     background-color: #c82333;
