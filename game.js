@@ -48,12 +48,10 @@ window.addEventListener('load', () => {
 
     function loadGameImages() {
         return new Promise(resolve => {
-            // Optimisation : ne charge les images qu'une seule fois.
             if (playerHeadImages.length > 0 && obstacleImages.length > 0 && collectibleImages.length > 0) { 
                 resolve();
                 return;
             }
-            // Réinitialise le compteur si on recharge
             imagesLoadedCount = 0; 
             playerHeadImages.length = 0;
             obstacleImages.length = 0;
@@ -85,38 +83,27 @@ window.addEventListener('load', () => {
         });
     }
 
-    // --- PAILLETTES : Classe Particule (paramètres ajustés) ---
+    // --- Classe Particule ---
     class Particle {
         constructor(x, y, color) {
-            this.x = x;
-            this.y = y;
-            this.color = color;
-            // Taille un peu plus grande : entre 3 et 7px
+            this.x = x; this.y = y; this.color = color;
             this.size = Math.random() * 4 + 3; 
-            this.vx = -gameSpeed / 3; // Ralenti un peu horizontalement
+            this.vx = -gameSpeed / 3; 
             this.vy = (Math.random() - 0.5) * 2; 
-            // Durée de vie plus longue : 40 frames
             this.life = 40; 
             this.gravity = 0.1;
         }
-
         update() {
-            this.life--;
-            this.vy += this.gravity;
-            this.x += this.vx;
-            this.y += this.vy;
+            this.life--; this.vy += this.gravity; this.x += this.vx; this.y += this.vy;
         }
-
         draw() {
-            ctx.fillStyle = this.color;
-            // L'opacité diminue avec la vie
-            ctx.globalAlpha = Math.max(0, this.life / 40); 
+            ctx.fillStyle = this.color; ctx.globalAlpha = Math.max(0, this.life / 40); 
             ctx.fillRect(this.x, this.y, this.size, this.size);
             ctx.globalAlpha = 1.0; 
         }
     }
 
-    // --- CLASSE PLAYER (avec émetteur de particules) ---
+    // --- CLASSE PLAYER (avec double saut) ---
     class Player {
         constructor(x, y, w, h, image) {
             this.x = x; this.y = y; this.w = w; this.h = h; this.image = image;
@@ -133,12 +120,10 @@ window.addEventListener('load', () => {
         }
         
         emitParticles() {
-            // Émettre seulement si le jeu est en cours
             if (gameLoopId && !isGameOver) {
                  const colors = ['#FFD700', '#FFFFFF', '#C0C0C0', '#FFEC8B'];
                  const color = colors[Math.floor(Math.random() * colors.length)];
                  const x = this.x + this.w / 2; const y = this.y + this.h / 2;
-                 // Ajouter une particule au tableau
                  particles.push(new Particle(x, y, color));
             }
         }
@@ -154,8 +139,6 @@ window.addEventListener('load', () => {
             }
             
             this.draw();
-            
-            // Émettre des particules
             this.emitParticles();
         }
         
@@ -201,7 +184,6 @@ window.addEventListener('load', () => {
         currentMusic = new Audio(musicPaths[musicIndex]);
         currentMusic.loop = true;
 
-        // Charger les images (si pas déjà fait)
         await loadGameImages(); 
         
         const randomIndex = Math.floor(Math.random() * playerHeadImages.length);
@@ -212,7 +194,7 @@ window.addEventListener('load', () => {
         player.isGrounded = true;
         obstacles = [];
         collectibles = [];
-        particles = []; // Vider les paillettes
+        particles = []; 
         score = 0;
         gameSpeed = 5; 
         isGameOver = false;
@@ -228,11 +210,10 @@ window.addEventListener('load', () => {
         
         gameContainer.classList.remove('in-game');
         
-        // Prépare les données mais n'affiche pas encore le jeu
         await initGameData(); 
 
         gameOverScreenEl.style.display = 'none';
-        startScreenEl.style.display = 'flex'; // Affiche le menu
+        startScreenEl.style.display = 'flex'; 
         
         isReady = true; 
         loadingText.innerText = "Appuyez pour commencer"; 
@@ -240,9 +221,9 @@ window.addEventListener('load', () => {
 
     // --- Démarrage du jeu ---
     function startGame() {
-        if (gameLoopId || !isReady) return; // Sécurité
+        if (gameLoopId || !isReady) return; 
         
-        gameContainer.classList.add('in-game'); // Anime le logo
+        gameContainer.classList.add('in-game'); 
         
         startScreenEl.style.display = 'none';
         gameOverScreenEl.style.display = 'none';
@@ -259,7 +240,6 @@ window.addEventListener('load', () => {
     const OBSTACLE_SPAWN_INTERVAL = 90; 
 
     function gameLoop() {
-        // Arrête la boucle si le jeu est fini
         if (isGameOver) {
              cancelAnimationFrame(gameLoopId);
              gameLoopId = null;
@@ -268,17 +248,14 @@ window.addEventListener('load', () => {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Cycle Jour/Nuit
         const dayNightProgress = (score % 500) / 500; 
         const nightOpacity = Math.sin(dayNightProgress * Math.PI) * 0.7; 
         ctx.fillStyle = `rgba(0, 0, 50, ${nightOpacity})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Sol
         ctx.fillStyle = '#666';
         ctx.fillRect(0, groundY, canvas.width, 70); 
         
-        // PAILLETTES : Màj et dessin AVANT le joueur
         for (let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
             p.update();
@@ -288,14 +265,13 @@ window.addEventListener('load', () => {
             }
         }
         
-        player.update(); // Joueur dessiné par-dessus les paillettes
+        player.update(); 
 
         obstacleTimer++;
         collectibleTimer++;
         
         let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 40); 
         
-        // Apparition Obstacles
         if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { 
             const cactusImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
             let w = 50; 
@@ -305,7 +281,6 @@ window.addEventListener('load', () => {
             obstacleTimer = 0 - (Math.random() * 20); 
         }
         
-        // Apparition Collectibles
         if (collectibleTimer > 200 && collectibleImages.length > 0) { 
             const noteImg = collectibleImages[0];
             const y = groundY - 120 - (Math.random() * 100); 
@@ -313,7 +288,6 @@ window.addEventListener('load', () => {
             collectibleTimer = 0;
         }
 
-        // Collisions Collectibles
         for (let i = collectibles.length - 1; i >= 0; i--) {
             let coll = collectibles[i];
             coll.update();
@@ -329,7 +303,6 @@ window.addEventListener('load', () => {
             }
         }
         
-        // Collisions Obstacles
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let obs = obstacles[i];
             obs.update();
@@ -344,7 +317,6 @@ window.addEventListener('load', () => {
                 playerHitbox.y + playerHitbox.h > obs.y
             ) {
                endGame();
-               // Sortir de la boucle après une collision
                return; 
             }
             
@@ -356,7 +328,6 @@ window.addEventListener('load', () => {
         
         gameSpeed += 0.003; 
         
-        // Relancer la boucle si le jeu n'est pas fini
         if (!isGameOver) {
              gameLoopId = requestAnimationFrame(gameLoop);
         }
@@ -369,11 +340,9 @@ window.addEventListener('load', () => {
 
     // --- Fin de partie ---
     function endGame() {
-        // Évite d'appeler endGame plusieurs fois si on touche 2 obstacles en même temps
         if (isGameOver) return; 
         
         isGameOver = true;
-        // Arrête la boucle de jeu immédiatement (ne pas attendre la prochaine frame)
         if (gameLoopId) {
              cancelAnimationFrame(gameLoopId); 
              gameLoopId = null; 
@@ -395,8 +364,7 @@ window.addEventListener('load', () => {
 
     // --- 'resetGame' retourne au menu ---
     async function resetGame() {
-        // S'assure que le jeu est bien marqué comme fini avant de réinitialiser
-        isGameOver = true; 
+        isGameOver = true; // S'assurer que le jeu est bien arrêté
         await initMenu(); 
     }
     
@@ -404,18 +372,14 @@ window.addEventListener('load', () => {
     async function handleInput(e) {
         if(e) e.preventDefault();
         
-        // Si le jeu charge ou est déjà fini (sécurité)
         if (!isReady) return; 
 
         if (isGameOver) {
-            // Si on est sur l'écran Game Over, on retourne au menu
             await resetGame(); 
         } else {
-            // Si on est sur le menu (jeu pas encore lancé)
             if (!gameLoopId) {
                 startGame(); 
             }
-            // Si le jeu est en cours
             player.jump(); 
         }
     }
