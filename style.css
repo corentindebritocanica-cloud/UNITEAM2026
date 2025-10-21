@@ -142,12 +142,11 @@ canvas {
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
-/* --- MODIFIÉ V2.0 : Styles pour l'affichage des bonus (retour en haut à gauche) --- */
+/* Styles pour l'affichage des bonus en jeu (en haut à gauche) */
 #powerUpInfo {
     position: absolute;
     top: 60px; /* Sous le score */
     left: 20px; /* Alignement à gauche */
-    /* transform: translateX(-50%); Supprimé */
     z-index: 10;
     color: #FFFFFF;
     text-shadow: 2px 2px 4px #000000;
@@ -172,4 +171,3 @@ canvas {
     font-size: 1em; /* Taille d'origine */
     color: #FFD700; 
 }
-/* --- FIN MODIFICATION --- */

@@ -57,11 +57,11 @@ window.addEventListener('load', () => {
         'perso11.png', 'perso12.png', 'perso13.png', 'perso14.png', 'perso15.png',
         'perso16.png', 'perso17.png', 'perso18.png'
     ];
-    // Utilise .PNG pour les power-ups
+    // --- MODIFIÉ V2.1 : Utilise .png (minuscule) pour les power-ups ---
     const powerUpImagePaths = {
-        invincible: 'chapeau.PNG',
-        superJump: 'botte.PNG',
-        magnet: 'aimant.PNG'
+        invincible: 'chapeau.png',
+        superJump: 'botte.png',
+        magnet: 'aimant.png'
     };
     
     let imagesLoadedCount = 0;
@@ -111,11 +111,7 @@ window.addEventListener('load', () => {
     }
 
     // --- Classe Particule ---
-    class Particle { 
-        constructor(x, y, color) { /* ... (inchangée) ... */ }
-        update() { /* ... (inchangée) ... */ }
-        draw() { /* ... (inchangée) ... */ }
-    }
+    class Particle { /* ... (inchangée) ... */ }
 
     // --- CLASSE PLAYER ---
     class Player { /* ... (inchangée) ... */ }
@@ -133,16 +129,14 @@ window.addEventListener('load', () => {
             if (!this.image || !this.image.width || !this.image.height) { 
                  console.warn(`Image pour power-up ${type} non chargée ou invalide.`); return null; 
             }
-            // --- MODIFIÉ V2.0 : Taille ENCORE augmentée ---
-            this.w = 100; // Encore plus large (était 80)
+            this.w = 100; // Très large
             this.h = (this.image.height / this.image.width) * this.w; 
-            // --- FIN MODIFICATION ---
             this.x = x; this.y = y; this.initialY = y; this.angle = Math.random() * Math.PI * 2;
         }
         draw() { if (this.image) ctx.drawImage(this.image, this.x, this.y, this.w, this.h); }
         update() {
             this.x -= gameSpeed; this.angle += 0.05;
-            this.y = this.initialY + Math.sin(this.angle) * 15; // Oscillation
+            this.y = this.initialY + Math.sin(this.angle) * 15; 
             this.draw();
         }
     }
