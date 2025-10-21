@@ -73,8 +73,7 @@ canvas {
     flex-direction: column;
     gap: 15px;
     
-    /* Pas besoin de padding-top si le logo est dedans */
-    /* padding-top: 100px; */ 
+    padding-top: 100px; /* Espace pour le logo au-dessus */
 }
 
 #gameOverScreen {
@@ -85,17 +84,32 @@ canvas {
     color: #dc3545;
 }
 
-/* Logo (simple, centré dans le menu) */
+/* Style et animation du logo */
 #gameLogo {
-    /* Pas besoin de position: absolute */
-    width: 100%; 
+    position: absolute;
+    z-index: 25; 
+    
+    /* État 1 : Au centre (Menu) */
+    width: 90%; 
     max-width: 300px; 
-    height: auto;   
-    margin: 0 auto 10px auto; /* Centré horizontalement */
-    /* Suppression de top, left, transform, transition, z-index */
+    height: auto;
+    top: 30%; 
+    left: 50%;
+    transform: translateX(-50%);
+    
+    transition: all 0.8s cubic-bezier(0.68, -0.55, 0.26, 1.55);
 }
 
-/* Suppression des styles pour .in-game #gameLogo */
+/* État 2 : En jeu (en haut à droite) */
+.game-container.in-game #gameLogo {
+    top: 20px;
+    left: auto; 
+    right: 20px;
+    width: 120px; 
+    max-width: 120px;
+    transform: translateX(0); 
+    z-index: 15; 
+}
 
 #loadingText {
     font-size: 1.2em;

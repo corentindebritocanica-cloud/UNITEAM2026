@@ -74,7 +74,7 @@ window.addEventListener('load', () => {
     }
 
     // --- Classe Particule ---
-    class Particle { /* ... (inchangée) ... */ 
+    class Particle { 
         constructor(x, y, color) {
             this.x = x; this.y = y; this.color = color;
             this.size = Math.random() * 4 + 3; 
@@ -100,7 +100,7 @@ window.addEventListener('load', () => {
             this.dy = 0; this.jumpPower = 15; this.isGrounded = false;
             this.jumpCount = 0; this.maxJumps = 2; 
         }
-        draw() { /* ... (inchangée) ... */
+        draw() { 
             if (this.image) {
                 ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
             } else { 
@@ -108,7 +108,7 @@ window.addEventListener('load', () => {
                 ctx.fillRect(this.x, this.y, this.w, this.h);
             }
         }
-        emitParticles() { /* ... (inchangée) ... */ 
+        emitParticles() { 
             if (gameLoopId && !isGameOver) {
                  const colors = ['#FFD700', '#FFFFFF', '#C0C0C0', '#FFEC8B'];
                  const color = colors[Math.floor(Math.random() * colors.length)];
@@ -119,12 +119,11 @@ window.addEventListener('load', () => {
         update() {
             this.dy += gravity; this.y += this.dy;
             
-            // Gestion du sol et reset du compteur de sauts
-            if (this.y + this.h >= groundY) { // Utilise >= pour plus de sûreté
+            if (this.y + this.h >= groundY) { 
                 this.y = groundY - this.h; 
                 this.dy = 0; 
-                if (!this.isGrounded) { // Si on vient juste d'atterrir
-                    this.jumpCount = 0; // Reset le compteur
+                if (!this.isGrounded) { 
+                    this.jumpCount = 0; 
                 }
                 this.isGrounded = true;
             } else {
@@ -135,19 +134,17 @@ window.addEventListener('load', () => {
             this.emitParticles();
         }
         
-        // CORRECTION DOUBLE SAUT
         jump() {
-            // Vérifie si on peut sauter (soit au sol, soit < max sauts)
-            if (this.isGrounded || this.jumpCount < this.maxJumps) { 
+            if (this.jumpCount < this.maxJumps) { 
                 this.dy = -this.jumpPower; 
                 this.jumpCount++; 
-                this.isGrounded = false; // Important même pour le 2e saut
+                this.isGrounded = false; 
             }
         }
     }
     
     // --- CLASSE OBSTACLE ---
-    class Obstacle { /* ... (inchangée) ... */ 
+    class Obstacle { 
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w || image.width; this.h = h || image.height;
             this.image = image; 
@@ -157,7 +154,7 @@ window.addEventListener('load', () => {
     }
 
     // --- CLASSE COLLECTIBLE ---
-    class Collectible { /* ... (inchangée) ... */
+    class Collectible { 
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w; this.h = h; this.image = image; 
         }
@@ -166,7 +163,7 @@ window.addEventListener('load', () => {
      }
 
     // --- 'initGameData' prépare une nouvelle partie ---
-    async function initGameData() { /* ... (inchangée) ... */ 
+    async function initGameData() { 
         gameContainer.classList.remove('shake');
         if (currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; currentMusic = null; }
         const musicIndex = Math.floor(Math.random() * musicPaths.length);
@@ -183,18 +180,20 @@ window.addEventListener('load', () => {
     }
 
     // --- 'initMenu' prépare le menu de démarrage ---
-    async function initMenu() { /* ... (inchangée, retire la classe in-game) ... */ 
+    async function initMenu() { 
         isReady = false; loadingText.innerText = "Chargement..."; 
-        // Retiré : gameContainer.classList.remove('in-game'); -> Géré dans initGameData
+        // Retire la classe 'in-game' pour que le logo soit au centre
+        gameContainer.classList.remove('in-game'); 
         await initGameData(); 
         gameOverScreenEl.style.display = 'none'; startScreenEl.style.display = 'flex'; 
         isReady = true; loadingText.innerText = "Appuyez pour commencer"; 
     }
 
     // --- Démarrage du jeu ---
-    function startGame() { /* ... (inchangée, ajoute la classe in-game) ... */ 
+    function startGame() { 
         if (gameLoopId || !isReady) return; 
-        // Retiré : gameContainer.classList.add('in-game'); -> Fait dans handleInput
+        // Ajoute la classe 'in-game' pour animer le logo vers le coin
+        gameContainer.classList.add('in-game'); 
         startScreenEl.style.display = 'none'; gameOverScreenEl.style.display = 'none';
         var promise = currentMusic.play();
         if (promise !== undefined) promise.catch(e => console.log("Musique bloquée:", e));
@@ -203,7 +202,7 @@ window.addEventListener('load', () => {
 
     // --- Boucle de jeu principale ---
     let obstacleTimer = 0; let collectibleTimer = 150; const OBSTACLE_SPAWN_INTERVAL = 90; 
-    function gameLoop() { /* ... (inchangée) ... */
+    function gameLoop() { 
         if (isGameOver) { cancelAnimationFrame(gameLoopId); gameLoopId = null; return; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const dayNightProgress = (score % 500) / 500; 
@@ -222,12 +221,12 @@ window.addEventListener('load', () => {
         if (!isGameOver) gameLoopId = requestAnimationFrame(gameLoop);
     }
 
-    function updateScore(value = 1) { /* ... (inchangée) ... */ 
+    function updateScore(value = 1) { 
         score += value; scoreEl.innerText = `Score: ${Math.floor(score)}`; 
     }
 
     // --- Fin de partie ---
-    function endGame() { /* ... (inchangée) ... */
+    function endGame() { 
         if (isGameOver) return; 
         isGameOver = true; if (gameLoopId) { cancelAnimationFrame(gameLoopId); gameLoopId = null; }
         if (currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; }
@@ -236,21 +235,19 @@ window.addEventListener('load', () => {
     }
 
     // --- 'resetGame' retourne au menu ---
-    async function resetGame() { /* ... (inchangée) ... */
+    async function resetGame() { 
         isGameOver = true; 
         await initMenu(); 
     }
     
     // --- 'handleInput' gère tous les taps ---
-    async function handleInput(e) { /* ... (inchangée) ... */
+    async function handleInput(e) { 
         if(e) e.preventDefault();
         if (!isReady) return; 
         if (isGameOver) {
             await resetGame(); 
         } else {
             if (!gameLoopId) {
-                 // Ajoute la classe in-game JUSTE avant de démarrer
-                 gameContainer.classList.add('in-game');
                 startGame(); 
             }
             player.jump(); 
