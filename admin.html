@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Vérification Images</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
+        h1 { text-align: center; margin-bottom: 20px; }
+        .image-gallery { 
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Crée une grille responsive */
+            gap: 15px; 
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .image-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            background-color: #fff;
+            border-radius: 4px;
+            position: relative; /* Pour le message d'erreur */
+        }
+        .image-item img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .image-item p {
+            font-size: 0.8em;
+            word-wrap: break-word; /* Coupe les noms de fichiers longs */
+            margin: 0;
+            color: #555;
+        }
+        .image-item .error {
+            color: red;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vérification des Images du Jeu</h1>
+    <a href="index.html">Retour au jeu</a>
+    <div id="imageGallery" class="image-gallery">
+        </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
