@@ -55,7 +55,7 @@ canvas {
     background-color: rgba(255, 255, 255, 0.9); 
     border-radius: 10px;
     text-align: center;
-    z-index: 20; /* Le logo sera au-dessus (25) */
+    z-index: 20; 
     border: 2px solid #333;
     
     display: flex; 
@@ -74,42 +74,39 @@ canvas {
     color: #dc3545;
 }
 
-/* --- MODIFICATION LOGO + ANIMATION --- */
+/* Style et animation du logo */
 #gameLogo {
     position: absolute;
-    z-index: 25; /* Au-dessus de tout (sauf Game Over) */
+    z-index: 25; 
     
     /* État 1 : Au centre (Menu) */
     width: 90%; 
     max-width: 300px; 
     height: auto;
-    top: 30%; /* Positionné au-dessus du menu */
+    top: 30%; 
     left: 50%;
     transform: translateX(-50%);
     
-    /* L'ANIMATION : dure 0.8s */
     transition: all 0.8s cubic-bezier(0.68, -0.55, 0.26, 1.55);
 }
 
 /* État 2 : En jeu (en haut à droite) */
 .game-container.in-game #gameLogo {
     top: 20px;
-    left: auto; /* Annule le 'left: 50%' */
+    left: auto; 
     right: 20px;
-    width: 120px; /* Plus petit */
+    width: 120px; 
     max-width: 120px;
-    transform: translateX(0); /* Annule la transformation */
-    z-index: 15; /* Passe derrière l'écran "Game Over" */
+    transform: translateX(0); 
+    z-index: 15; 
 }
-/* --- FIN MODIFICATION LOGO --- */
-
 
 #loadingText {
     font-size: 1.2em;
     font-weight: bold;
 }
 
-/* Animation de secousse (inchangée) */
+/* Animation de secousse */
 .shake {
     animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
     transform: translate3d(0, 0, 0);

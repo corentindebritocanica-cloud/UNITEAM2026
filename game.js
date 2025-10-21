@@ -4,9 +4,7 @@ window.addEventListener('load', () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    // On récupère le conteneur principal
     const gameContainer = document.querySelector('.game-container');
-    
     const scoreEl = document.getElementById('score');
     const startScreenEl = document.getElementById('startScreen');
     const gameOverScreenEl = document.getElementById('gameOverScreen');
@@ -21,7 +19,7 @@ window.addEventListener('load', () => {
     ];
     let currentMusic = null; 
 
-    let player, obstacles, collectibles, score, gameSpeed, gravity, isGameOver, gameLoopId;
+    let player, obstacles, collectibles, particles, score, gameSpeed, gravity, isGameOver, gameLoopId;
     let isReady = false; 
 
     const groundY = canvas.height - 70;
@@ -48,7 +46,6 @@ window.addEventListener('load', () => {
     let imagesLoadedCount = 0;
     const totalImages = obstacleImagePaths.length + playerImagePaths.length + collectibleImagePaths.length;
 
-    // Fonction pour charger TOUTES les images (une seule fois)
     function loadGameImages() {
         return new Promise(resolve => {
             if (playerHeadImages.length > 0) { 
@@ -81,11 +78,36 @@ window.addEventListener('load', () => {
         });
     }
 
-    // --- CLASSE PLAYER ---
+    // --- Classe Particule (inchangée) ---
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x; this.y = y; this.color = color;
+            this.size = Math.random() * 4 + 2; 
+            this.vx = -gameSpeed / 2; 
+            this.vy = (Math.random() - 0.5) * 2; 
+            this.life = 30; 
+            this.gravity = 0.1;
+        }
+        update() {
+            this.life--; this.vy += this.gravity; this.x += this.vx; this.y += this.vy;
+        }
+        draw() {
+            ctx.fillStyle = this.color; ctx.globalAlpha = this.life / 30; 
+            ctx.fillRect(this.x, this.y, this.size, this.size);
+            ctx.globalAlpha = 1.0; 
+        }
+    }
+
+    // --- CLASSE PLAYER (MODIFIÉE pour le double saut) ---
     class Player {
         constructor(x, y, w, h, image) {
             this.x = x; this.y = y; this.w = w; this.h = h; this.image = image;
-            this.dy = 0; this.jumpPower = 15; this.isGrounded = false;
+            this.dy = 0; 
+            this.jumpPower = 15; 
+            this.isGrounded = false;
+            // --- AJOUT DOUBLE SAUT : Compteur de sauts ---
+            this.jumpCount = 0; 
+            this.maxJumps = 2; // On autorise 2 sauts
         }
         draw() {
             if (this.image) {
@@ -95,21 +117,45 @@ window.addEventListener('load', () => {
                 ctx.fillRect(this.x, this.y, this.w, this.h);
             }
         }
+        
+        emitParticles() {
+            const colors = ['#FFD700', '#FFFFFF', '#C0C0C0', '#FFEC8B'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const x = this.x + this.w / 2; const y = this.y + this.h / 2;
+            particles.push(new Particle(x, y, color));
+        }
+
         update() {
             this.dy += gravity; this.y += this.dy;
+            
+            // Si on touche le sol
             if (this.y + this.h > groundY) {
                 this.y = groundY - this.h; this.dy = 0; this.isGrounded = true;
+                // --- AJOUT DOUBLE SAUT : Réinitialiser le compteur au sol ---
+                this.jumpCount = 0; 
+            } else {
+                this.isGrounded = false;
             }
+            
             this.draw();
+            
+            if (!isGameOver) {
+                this.emitParticles();
+            }
         }
+        
+        // --- MODIFICATION DOUBLE SAUT : Fonction de saut ---
         jump() {
-            if (this.isGrounded) { 
-                this.dy = -this.jumpPower; this.isGrounded = false; 
+            // Si on peut encore sauter (moins de 2 sauts faits)
+            if (this.jumpCount < this.maxJumps) { 
+                this.dy = -this.jumpPower; // Applique la force du saut
+                this.jumpCount++; // Incrémente le compteur
+                this.isGrounded = false; // On n'est plus au sol
             }
         }
     }
     
-    // --- CLASSE OBSTACLE ---
+    // --- CLASSE OBSTACLE (inchangée) ---
     class Obstacle {
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w || image.width; this.h = h || image.height;
@@ -119,7 +165,7 @@ window.addEventListener('load', () => {
         update() { this.x -= gameSpeed; this.draw(); }
     }
 
-    // --- CLASSE COLLECTIBLE ---
+    // --- CLASSE COLLECTIBLE (inchangée) ---
     class Collectible {
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w; this.h = h; this.image = image; 
@@ -154,6 +200,7 @@ window.addEventListener('load', () => {
         player.isGrounded = true;
         obstacles = [];
         collectibles = [];
+        particles = [];
         score = 0;
         gameSpeed = 5; 
         isGameOver = false;
@@ -167,7 +214,6 @@ window.addEventListener('load', () => {
         isReady = false; 
         loadingText.innerText = "Chargement..."; 
         
-        // --- MODIFICATION : Retire la classe '.in-game' pour animer le logo ---
         gameContainer.classList.remove('in-game');
         
         await initGameData(); 
@@ -183,7 +229,6 @@ window.addEventListener('load', () => {
     function startGame() {
         if (gameLoopId) return; 
         
-        // --- MODIFICATION : Ajoute la classe '.in-game' pour animer le logo ---
         gameContainer.classList.add('in-game');
         
         startScreenEl.style.display = 'none';
@@ -213,6 +258,16 @@ window.addEventListener('load', () => {
         ctx.fillStyle = '#666';
         ctx.fillRect(0, groundY, canvas.width, 70); 
         
+        // Màj Paillettes
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.update();
+            p.draw();
+            if (p.life <= 0) {
+                particles.splice(i, 1);
+            }
+        }
+        
         player.update(); 
 
         obstacleTimer++;
@@ -220,6 +275,7 @@ window.addEventListener('load', () => {
         
         let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 40); 
         
+        // Apparition Obstacles
         if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { 
             const cactusImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
             let w = 50; 
@@ -229,6 +285,7 @@ window.addEventListener('load', () => {
             obstacleTimer = 0 - (Math.random() * 20); 
         }
         
+        // Apparition Collectibles
         if (collectibleTimer > 200 && collectibleImages.length > 0) { 
             const noteImg = collectibleImages[0];
             const y = groundY - 120 - (Math.random() * 100); 
@@ -236,6 +293,7 @@ window.addEventListener('load', () => {
             collectibleTimer = 0;
         }
 
+        // Collisions Collectibles
         for (let i = collectibles.length - 1; i >= 0; i--) {
             let coll = collectibles[i];
             coll.update();
@@ -251,6 +309,7 @@ window.addEventListener('load', () => {
             }
         }
         
+        // Collisions Obstacles
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let obs = obstacles[i];
             obs.update();
@@ -304,9 +363,8 @@ window.addEventListener('load', () => {
         }, 300);
     }
 
-    // --- CORRECTION : 'resetGame' retourne au menu ---
+    // --- 'resetGame' retourne au menu ---
     async function resetGame() {
-        // Au lieu de relancer, on retourne au menu
         await initMenu(); 
     }
     
@@ -317,14 +375,12 @@ window.addEventListener('load', () => {
         if (!isReady && !isGameOver) return; 
 
         if (isGameOver) {
-            // Si on est sur l'écran Game Over, on retourne au menu
             await resetGame(); 
         } else {
-            // Si on est sur le menu
             if (!gameLoopId) {
                 startGame(); 
             }
-            // Si le jeu est en cours
+            // --- MODIFICATION DOUBLE SAUT : Appelle la fonction jump() qui gère le compteur ---
             player.jump(); 
         }
     }
