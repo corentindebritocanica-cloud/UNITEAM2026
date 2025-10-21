@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Dance Team Runner</title>
+    <title>UNITEAM ADVENTURE</title> 
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,12 +13,17 @@
         <canvas id="gameCanvas"></canvas>
         
         <div id="startScreen">
-            <h1>Dance Runner</h1>
-            <p>Appuyez pour commencer</p>
+            
+            <img src="uniteamadventure.png" alt="UNITEAM ADVENTURE" id="gameLogo"> 
+            
+            <p id="loadingText">Choisis ton niveau :</p>
+            
+            <button id="level1Btn" class="menu-btn">Niveau 1 : Course</button>
+            <button id="level2Btn" class="menu-btn">Niveau 2 : Extrême</button>
         </div>
 
         <div id="gameOverScreen">
-            <h1>Game Over</h1>
+            <h1>Game Over</h1> 
             <p>Score final: <span id="finalScore">0</span></p>
             <p>Appuyez pour recommencer</p>
         </div>

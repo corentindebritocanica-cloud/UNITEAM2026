@@ -21,6 +21,7 @@ body {
     align-items: center;
     position: relative;
     
+    /* Fond d'écran Western */
     background-image: url('FOND DE PLAN.jpg'); 
     background-size: cover; 
     background-position: center; 
@@ -66,8 +67,41 @@ canvas {
     display: none; /* Caché par défaut */
 }
 
-h1 {
-    color: #007bff;
+/* Style pour le "Game Over" */
+#gameOverScreen h1 {
+    color: #dc3545;
 }
 
-/* --- TOUT LE CSS DU CLASSEMENT A ÉTÉ SUPPRIMÉ --- */
+/* Style pour le logo dans le menu */
+#gameLogo {
+    width: 100%; /* Le logo prend toute la largeur de la boîte */
+    max-width: 300px; /* Mais pas plus de 300px */
+    height: auto;   /* Garde les proportions */
+    margin: 0 auto 10px auto; /* Centré et espace en dessous */
+}
+
+/* Styles pour les boutons du menu */
+.menu-btn {
+    padding: 12px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+
+#level1Btn {
+    background-color: #28a745; /* Vert */
+}
+#level1Btn:hover {
+    background-color: #218838;
+}
+
+#level2Btn {
+    background-color: #dc3545; /* Rouge */
+}
+#level2Btn:hover {
+    background-color: #c82333;
+}
