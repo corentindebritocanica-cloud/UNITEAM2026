@@ -117,13 +117,12 @@ canvas {
     margin-bottom: 5px;
 }
 
-/* --- MODIFIÉ V1.7 : Icônes plus grandes dans le menu --- */
+/* Icônes plus grandes dans le menu */
 .power-up-icon {
-    width: 35px;  /* Augmenté de 25px */
+    width: 35px;  /* Augmenté */
     height: auto;
     margin-right: 10px; 
 }
-/* --- FIN MODIFICATION --- */
 
 .power-up-desc {
     font-size: 0.9em;
@@ -171,3 +170,5 @@ canvas {
 #powerUpTimer {
     font-size: 1.1em; 
     color: #FFD700; 
+}
+/* Le fichier se termine ici. Pas d'accolade après ce commentaire. */
