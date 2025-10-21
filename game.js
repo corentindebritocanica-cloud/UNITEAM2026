@@ -72,10 +72,50 @@ window.addEventListener('load', () => {
     const totalImages = allImagePaths.length;
 
     // Fonction pour charger TOUTES les images
-    function loadGameImages() { /* ... (inchangée) ... */ }
+    function loadGameImages() {
+        return new Promise(resolve => {
+            if (imagesLoadedCount === totalImages && playerHeadImages.length > 0) { 
+                 resolve(); return; 
+            }
+            imagesLoadedCount = 0; 
+            playerHeadImages.length = 0; obstacleImages.length = 0; collectibleImages.length = 0;
+            Object.keys(powerUpImages).forEach(key => delete powerUpImages[key]); 
+
+            if (totalImages === 0) resolve();
+            
+            let loadedCount = 0; 
+            allImagePaths.forEach(path => {
+                const img = new Image(); 
+                img.src = path;
+                img.onload = () => {
+                    if (obstacleImagePaths.includes(path)) obstacleImages.push(img);
+                    else if (playerImagePaths.includes(path)) playerHeadImages.push(img);
+                    else if (collectibleImagePaths.includes(path)) collectibleImages.push(img);
+                    else { 
+                        for (const type in powerUpImagePaths) {
+                            if (powerUpImagePaths[type] === path) {
+                                powerUpImages[type] = img; break;
+                            }
+                        }
+                    }
+                    loadedCount++; imagesLoadedCount = loadedCount;
+                    if (loadedCount === totalImages) { console.log("Images chargées !"); resolve(); }
+                };
+                img.onerror = () => {
+                    console.error(`Erreur chargement : ${path}`); 
+                    loadedCount++; imagesLoadedCount = loadedCount;
+                    if (loadedCount === totalImages) resolve(); 
+                };
+            });
+        });
+    }
 
     // --- Classe Particule ---
-    class Particle { /* ... (inchangée) ... */ }
+    class Particle { 
+        constructor(x, y, color) { /* ... (inchangée) ... */ }
+        update() { /* ... (inchangée) ... */ }
+        draw() { /* ... (inchangée) ... */ }
+    }
 
     // --- CLASSE PLAYER ---
     class Player { /* ... (inchangée) ... */ }
@@ -93,8 +133,8 @@ window.addEventListener('load', () => {
             if (!this.image || !this.image.width || !this.image.height) { 
                  console.warn(`Image pour power-up ${type} non chargée ou invalide.`); return null; 
             }
-            // --- MODIFIÉ V1.9 : Taille ENCORE augmentée ---
-            this.w = 80; // Encore plus large (était 60)
+            // --- MODIFIÉ V2.0 : Taille ENCORE augmentée ---
+            this.w = 100; // Encore plus large (était 80)
             this.h = (this.image.height / this.image.width) * this.w; 
             // --- FIN MODIFICATION ---
             this.x = x; this.y = y; this.initialY = y; this.angle = Math.random() * Math.PI * 2;
