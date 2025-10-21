@@ -4,9 +4,7 @@ window.addEventListener('load', () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    // --- IDÉE 3 : On récupère le conteneur pour le secouer ---
     const gameContainer = document.querySelector('.game-container');
-    
     const scoreEl = document.getElementById('score');
     const startScreenEl = document.getElementById('startScreen');
     const gameOverScreenEl = document.getElementById('gameOverScreen');
@@ -21,7 +19,6 @@ window.addEventListener('load', () => {
     ];
     let currentMusic = null; 
 
-    // --- IDÉE 1 : Ajout des collectibles ---
     let player, obstacles, collectibles, score, gameSpeed, gravity, isGameOver, gameLoopId;
     let isReady = false; 
 
@@ -29,16 +26,13 @@ window.addEventListener('load', () => {
 
     const obstacleImages = [];
     const playerHeadImages = []; 
-    // --- IDÉE 1 : Ajout de l'image de la note ---
     const collectibleImages = [];
     
     let selectedHeadImage = null; 
     const PLAYER_WIDTH = 50; 
     const PLAYER_HEIGHT = 50; 
     
-    // --- IDÉE 1 : Ajout du chemin de l'image de la note ---
     const collectibleImagePaths = ['note.png'];
-
     const obstacleImagePaths = [
         'cactus1.png', 'cactus2.png', 'cactus3.png', 'cactus4.png' 
     ];
@@ -50,10 +44,9 @@ window.addEventListener('load', () => {
     ];
     
     let imagesLoadedCount = 0;
-    // --- IDÉE 1 : Mettre à jour le total d'images à charger ---
     const totalImages = obstacleImagePaths.length + playerImagePaths.length + collectibleImagePaths.length;
 
-    // Fonction pour charger TOUTES les images (Obstacles, Têtes, Collectibles)
+    // Fonction pour charger TOUTES les images (une seule fois)
     function loadGameImages() {
         return new Promise(resolve => {
             if (playerHeadImages.length > 0) { 
@@ -81,15 +74,12 @@ window.addEventListener('load', () => {
             };
             
             obstacleImagePaths.forEach(path => loadImage(path, obstacleImages));
-            // --- BUG CORRIGÉ ICI ---
-            // On charge bien dans 'playerHeadImages' et non 'playerImagePaths'
             playerImagePaths.forEach(path => loadImage(path, playerHeadImages));
-            // --- FIN DU BUG CORRIGÉ ---
             collectibleImagePaths.forEach(path => loadImage(path, collectibleImages));
         });
     }
 
-    // --- CLASSE PLAYER (inchangée) ---
+    // --- CLASSE PLAYER ---
     class Player {
         constructor(x, y, w, h, image) {
             this.x = x; this.y = y; this.w = w; this.h = h; this.image = image;
@@ -99,7 +89,6 @@ window.addEventListener('load', () => {
             if (this.image) {
                 ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
             } else { 
-                // Fallback (le cube bleu) qui s'affichait à cause du bug
                 ctx.fillStyle = '#007bff';
                 ctx.fillRect(this.x, this.y, this.w, this.h);
             }
@@ -118,7 +107,7 @@ window.addEventListener('load', () => {
         }
     }
     
-    // --- CLASSE OBSTACLE (inchangée) ---
+    // --- CLASSE OBSTACLE ---
     class Obstacle {
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w || image.width; this.h = h || image.height;
@@ -128,7 +117,7 @@ window.addEventListener('load', () => {
         update() { this.x -= gameSpeed; this.draw(); }
     }
 
-    // --- IDÉE 1 : NOUVELLE CLASSE POUR LES COLLECTIBLES ---
+    // --- CLASSE COLLECTIBLE ---
     class Collectible {
         constructor(x, y, image, w, h) { 
             this.x = x; this.y = y; this.w = w; this.h = h; this.image = image; 
@@ -137,10 +126,10 @@ window.addEventListener('load', () => {
         update() { this.x -= gameSpeed; this.draw(); }
     }
 
-    // --- Initialisation ---
-    async function init() { 
-        isReady = false; 
-        loadingText.innerText = "Chargement..."; 
+    // --- CORRECTION : 'initGameData' prépare une nouvelle partie (sans changer l'écran) ---
+    async function initGameData() {
+        // S'assurer que la secousse est enlevée
+        gameContainer.classList.remove('shake');
         
         if (currentMusic) {
             currentMusic.pause();
@@ -148,26 +137,43 @@ window.addEventListener('load', () => {
             currentMusic = null;
         }
         
+        // Choisir une nouvelle musique
         const musicIndex = Math.floor(Math.random() * musicPaths.length);
         currentMusic = new Audio(musicPaths[musicIndex]);
         currentMusic.loop = true;
 
-        await loadGameImages();
+        // Charger les images (seulement la première fois)
+        if (playerHeadImages.length === 0) {
+            await loadGameImages();
+        }
+        
+        // Choisir une nouvelle tête
         const randomIndex = Math.floor(Math.random() * playerHeadImages.length);
-        // S'assurer qu'on a bien une image, sinon fallback (mais le bug est corrigé)
         selectedHeadImage = playerHeadImages.length > 0 ? playerHeadImages[randomIndex] : null;
 
+        // Réinitialiser les variables
         gravity = 0.8;
         player = new Player(50, groundY - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT, selectedHeadImage); 
         player.isGrounded = true;
-
         obstacles = [];
         collectibles = [];
         score = 0;
         gameSpeed = 5; 
         isGameOver = false;
+        gameLoopId = null; // Important
 
         scoreEl.innerText = 'Score: 0';
+    }
+
+    // --- CORRECTION : 'initMenu' prépare le menu de démarrage ---
+    async function initMenu() { 
+        isReady = false; 
+        loadingText.innerText = "Chargement..."; 
+        
+        // Prépare les données (charge les images, etc.)
+        await initGameData(); 
+
+        // Affiche le menu
         gameOverScreenEl.style.display = 'none';
         startScreenEl.style.display = 'flex';
         
@@ -177,14 +183,21 @@ window.addEventListener('load', () => {
 
     // --- Démarrage du jeu ---
     function startGame() {
-        if (gameLoopId) return; 
+        if (gameLoopId) return; // Ne pas lancer si déjà lancé
+        
+        // Cacher les menus
         startScreenEl.style.display = 'none';
+        gameOverScreenEl.style.display = 'none';
+        
+        // Lancer la musique
         var promise = currentMusic.play();
         if (promise !== undefined) promise.catch(e => console.log("Musique bloquée"));
+        
+        // Lancer la boucle
         gameLoopId = requestAnimationFrame(gameLoop);
     }
 
-    // --- Boucle de jeu principale (modifiée) ---
+    // --- Boucle de jeu principale ---
     let obstacleTimer = 0; 
     let collectibleTimer = 150; 
     const OBSTACLE_SPAWN_INTERVAL = 90; 
@@ -194,12 +207,11 @@ window.addEventListener('load', () => {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // --- IDÉE 2 : CYCLE JOUR/NUIT ---
+        // Cycle Jour/Nuit
         const dayNightProgress = (score % 500) / 500; 
         const nightOpacity = Math.sin(dayNightProgress * Math.PI) * 0.7; 
         ctx.fillStyle = `rgba(0, 0, 50, ${nightOpacity})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // --- FIN IDÉE 2 ---
 
         // Sol
         ctx.fillStyle = '#666';
@@ -212,7 +224,7 @@ window.addEventListener('load', () => {
         
         let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 40); 
         
-        // Apparition des obstacles (cactus)
+        // Apparition des obstacles
         if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { 
             const cactusImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
             let w = 50; 
@@ -222,7 +234,7 @@ window.addEventListener('load', () => {
             obstacleTimer = 0 - (Math.random() * 20); 
         }
         
-        // --- IDÉE 1 : Apparition des collectibles (notes) ---
+        // Apparition des collectibles (notes)
         if (collectibleTimer > 200 && collectibleImages.length > 0) { 
             const noteImg = collectibleImages[0];
             const y = groundY - 120 - (Math.random() * 100); 
@@ -230,16 +242,13 @@ window.addEventListener('load', () => {
             collectibleTimer = 0;
         }
 
-        // --- IDÉE 1 : Mettre à jour et vérifier collisions des collectibles ---
+        // Collisions Collectibles
         for (let i = collectibles.length - 1; i >= 0; i--) {
             let coll = collectibles[i];
             coll.update();
-
             if (
-                player.x < coll.x + coll.w &&
-                player.x + player.w > coll.x &&
-                player.y < coll.y + coll.h &&
-                player.y + player.h > coll.y
+                player.x < coll.x + coll.w && player.x + player.w > coll.x &&
+                player.y < coll.y + coll.h && player.y + player.h > coll.y
             ) {
                 updateScore(10); 
                 collectibles.splice(i, 1); 
@@ -249,17 +258,13 @@ window.addEventListener('load', () => {
             }
         }
         
-        // Mettre à jour et vérifier collisions des obstacles
+        // Collisions Obstacles
         for (let i = obstacles.length - 1; i >= 0; i--) {
             let obs = obstacles[i];
             obs.update();
             
-            const playerHitbox = {
-                x: player.x + 5, y: player.y + 5, w: player.w - 10, h: player.h - 10
-            };
-            const obsHitbox = {
-                x: obs.x + 5, y: obs.y + 5, w: obs.w - 10, h: obs.h - 10
-            };
+            const playerHitbox = {x: player.x + 5, y: player.y + 5, w: player.w - 10, h: player.h - 10};
+            const obsHitbox = {x: obs.x + 5, y: obs.y + 5, w: obs.w - 10, h: obs.h - 10};
 
             if (
                 playerHitbox.x < obsHitbox.x + obsHitbox.w &&
@@ -286,12 +291,12 @@ window.addEventListener('load', () => {
         scoreEl.innerText = `Score: ${Math.floor(score)}`; 
     }
 
-    // --- Fin de partie (modifiée) ---
+    // --- Fin de partie ---
     function endGame() {
         if (isGameOver) return;
         isGameOver = true;
         cancelAnimationFrame(gameLoopId); 
-        gameLoopId = null; 
+        gameLoopId = null; // Important : signale que le jeu est arrêté
         
         if (currentMusic) {
             currentMusic.pause();
@@ -299,38 +304,45 @@ window.addEventListener('load', () => {
         }
         
         finalScoreEl.innerText = Math.floor(score);
-        gameOverScreenEl.style.display = 'flex';
+        gameOverScreenEl.style.display = 'flex'; // Affiche l'écran de fin
 
-        // --- IDÉE 3 : Déclencher la secousse ---
+        // Déclenche la secousse
         gameContainer.classList.add('shake');
         setTimeout(() => {
             gameContainer.classList.remove('shake');
         }, 300);
     }
 
-    // --- Contrôles (inchangés) ---
-    
+    // --- CORRECTION : 'resetGame' relance le jeu directement ---
     async function resetGame() {
-        await init(); 
+        await initGameData(); // Prépare les données (nouvelle tête, score 0...)
+        startGame(); // Lance le jeu (cache l'écran Game Over, lance la boucle)
     }
     
+    // --- CORRECTION : 'handleInput' gère tous les taps ---
     async function handleInput(e) {
         if(e) e.preventDefault();
         
+        // Si le jeu charge, ne rien faire
         if (!isReady && !isGameOver) return; 
 
         if (isGameOver) {
+            // Si on est sur l'écran Game Over, on relance
             await resetGame(); 
         } else {
+            // Si on est sur le menu (jeu pas lancé)
             if (!gameLoopId) {
                 startGame(); 
             }
+            // Si le jeu est en cours
             player.jump(); 
         }
     }
     
+    // Écouteurs d'événements
     window.addEventListener('touchstart', handleInput, { passive: false });
     window.addEventListener('mousedown', handleInput);
     
-    init();
+    // Lancement initial (vers le menu)
+    initMenu();
 });
