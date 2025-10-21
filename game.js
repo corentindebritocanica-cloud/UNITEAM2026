@@ -81,8 +81,10 @@ window.addEventListener('load', () => {
             };
             
             obstacleImagePaths.forEach(path => loadImage(path, obstacleImages));
-            playerImagePaths.forEach(path => loadImage(path, playerImagePaths));
-            // --- IDÉE 1 : Charger l'image de la note ---
+            // --- BUG CORRIGÉ ICI ---
+            // On charge bien dans 'playerHeadImages' et non 'playerImagePaths'
+            playerImagePaths.forEach(path => loadImage(path, playerHeadImages));
+            // --- FIN DU BUG CORRIGÉ ---
             collectibleImagePaths.forEach(path => loadImage(path, collectibleImages));
         });
     }
@@ -97,6 +99,7 @@ window.addEventListener('load', () => {
             if (this.image) {
                 ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
             } else { 
+                // Fallback (le cube bleu) qui s'affichait à cause du bug
                 ctx.fillStyle = '#007bff';
                 ctx.fillRect(this.x, this.y, this.w, this.h);
             }
@@ -151,6 +154,7 @@ window.addEventListener('load', () => {
 
         await loadGameImages();
         const randomIndex = Math.floor(Math.random() * playerHeadImages.length);
+        // S'assurer qu'on a bien une image, sinon fallback (mais le bug est corrigé)
         selectedHeadImage = playerHeadImages.length > 0 ? playerHeadImages[randomIndex] : null;
 
         gravity = 0.8;
@@ -158,7 +162,6 @@ window.addEventListener('load', () => {
         player.isGrounded = true;
 
         obstacles = [];
-        // --- IDÉE 1 : Initialiser le tableau des collectibles ---
         collectibles = [];
         score = 0;
         gameSpeed = 5; 
@@ -183,8 +186,7 @@ window.addEventListener('load', () => {
 
     // --- Boucle de jeu principale (modifiée) ---
     let obstacleTimer = 0; 
-    // --- IDÉE 1 : Timer pour les notes de musique ---
-    let collectibleTimer = 150; // Décalé par rapport aux obstacles
+    let collectibleTimer = 150; 
     const OBSTACLE_SPAWN_INTERVAL = 90; 
 
     function gameLoop() {
@@ -193,11 +195,8 @@ window.addEventListener('load', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // --- IDÉE 2 : CYCLE JOUR/NUIT ---
-        // Calcule la progression (0 à 1) basée sur le score, pour un cycle toutes les 500pts
         const dayNightProgress = (score % 500) / 500; 
-        // Utilise un sinus pour une transition douce (0 -> 0.7 -> 0)
         const nightOpacity = Math.sin(dayNightProgress * Math.PI) * 0.7; 
-        // Dessine un rectangle bleu nuit semi-transparent
         ctx.fillStyle = `rgba(0, 0, 50, ${nightOpacity})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         // --- FIN IDÉE 2 ---
@@ -224,9 +223,8 @@ window.addEventListener('load', () => {
         }
         
         // --- IDÉE 1 : Apparition des collectibles (notes) ---
-        if (collectibleTimer > 200 && collectibleImages.length > 0) { // Plus rare que les cactus
+        if (collectibleTimer > 200 && collectibleImages.length > 0) { 
             const noteImg = collectibleImages[0];
-            // Position Y aléatoire en l'air
             const y = groundY - 120 - (Math.random() * 100); 
             collectibles.push(new Collectible(canvas.width, y, noteImg, 30, 30));
             collectibleTimer = 0;
@@ -237,17 +235,15 @@ window.addEventListener('load', () => {
             let coll = collectibles[i];
             coll.update();
 
-            // Collision avec le joueur
             if (
                 player.x < coll.x + coll.w &&
                 player.x + player.w > coll.x &&
                 player.y < coll.y + coll.h &&
                 player.y + player.h > coll.y
             ) {
-                updateScore(10); // Gagne +10 points bonus
-                collectibles.splice(i, 1); // Supprime la note
+                updateScore(10); 
+                collectibles.splice(i, 1); 
             } 
-            // Supprimer si hors écran
             else if (coll.x + coll.w < 0) {
                 collectibles.splice(i, 1);
             }
@@ -268,7 +264,7 @@ window.addEventListener('load', () => {
             if (
                 playerHitbox.x < obsHitbox.x + obsHitbox.w &&
                 playerHitbox.x + playerHitbox.w > obsHitbox.x &&
-                playerHitbox.y < obs.y + obs.h && // Utilise obs.y (pas obsHitbox.y)
+                playerHitbox.y < obs.y + obs.h && 
                 playerHitbox.y + playerHitbox.h > obs.y
             ) {
                endGame();
@@ -276,11 +272,11 @@ window.addEventListener('load', () => {
             
             if (obs.x + obs.w < 0) {
                 obstacles.splice(i, 1);
-                updateScore(1); // +1 pt pour un obstacle évité
+                updateScore(1); 
             }
         }
         
-        gameSpeed += 0.003; // Augmentation de la vitesse
+        gameSpeed += 0.003; 
         
         gameLoopId = requestAnimationFrame(gameLoop);
     }
@@ -307,7 +303,6 @@ window.addEventListener('load', () => {
 
         // --- IDÉE 3 : Déclencher la secousse ---
         gameContainer.classList.add('shake');
-        // Retirer la classe après l'animation (300ms)
         setTimeout(() => {
             gameContainer.classList.remove('shake');
         }, 300);
