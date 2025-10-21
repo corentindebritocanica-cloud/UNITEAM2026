@@ -62,8 +62,7 @@ canvas {
     flex-direction: column;
     gap: 15px;
     
-    /* On ajoute du padding en haut pour faire de la place au logo */
-    padding-top: 100px; 
+    padding-top: 100px; /* Espace pour le logo au-dessus */
 }
 
 #gameOverScreen {
@@ -119,3 +118,4 @@ canvas {
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 /* --- FIN IDÉE 3 --- */
+/* Le fichier se termine ici. Pas d'accolade après ce commentaire. */
