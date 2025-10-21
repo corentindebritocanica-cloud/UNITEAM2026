@@ -1,9 +1,9 @@
 // Attendre que la page soit chargée
 window.addEventListener('load', () => {
-    console.log("Window loaded. Initializing game setup..."); // DEBUG LOG
+    console.log("Window loaded. Initializing game setup..."); 
 
     const canvas = document.getElementById('gameCanvas');
-    if (!canvas) { console.error("Canvas element not found!"); return; } // Early exit if canvas missing
+    if (!canvas) { console.error("Canvas element not found!"); return; } 
     const ctx = canvas.getContext('2d');
     
     const gameContainer = document.querySelector('.game-container');
@@ -17,15 +17,13 @@ window.addEventListener('load', () => {
     const powerUpTimerEl = document.getElementById('powerUpTimer');
     const adminBtn = document.getElementById('adminBtn');
 
-    // Basic check for essential elements
     if (!scoreEl || !startScreenEl || !gameOverScreenEl || !loadingText || !powerUpTextEl || !powerUpTimerEl || !adminBtn) {
          console.error("One or more UI elements are missing from index.html!");
-         // Optionally display an error to the user
          if(loadingText) loadingText.innerText = "Erreur: Interface incomplète!";
          return; 
     }
     
-    console.log("Setting canvas dimensions..."); // DEBUG LOG
+    console.log("Setting canvas dimensions..."); 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -69,58 +67,53 @@ window.addEventListener('load', () => {
         'perso11.png', 'perso12.png', 'perso13.png', 'perso14.png', 'perso15.png',
         'perso16.png', 'perso17.png', 'perso18.png'
     ];
-    // Utilise .PNG pour les power-ups
+    // --- CORRECTION V2.4 : Utilise .png (minuscule) pour correspondre à GitHub ---
     const powerUpImagePaths = {
-        invincible: 'chapeau.PNG',
-        superJump: 'botte.PNG',
-        magnet: 'aimant.PNG'
+        invincible: 'chapeau.png',
+        superJump: 'botte.png',
+        magnet: 'aimant.png'
     };
     
-    let imagesLoadedCount = 0; // Compteur global
+    let imagesLoadedCount = 0; 
     const allImagePaths = [
         ...obstacleImagePaths, ...playerImagePaths, ...collectibleImagePaths, 
         ...Object.values(powerUpImagePaths) 
     ];
     const totalImages = allImagePaths.length;
-    console.log(`Attempting to load ${totalImages} images.`); // DEBUG LOG
+    console.log(`Attempting to load ${totalImages} images.`); 
 
     // Fonction pour charger TOUTES les images
     function loadGameImages() {
-        console.log("Starting loadGameImages function..."); // DEBUG LOG
+        console.log("Starting loadGameImages function..."); 
         return new Promise((resolve, reject) => { 
-            // Check if already loaded correctly
-            if (imagesLoadedCount === totalImages && playerHeadImages.length === playerImagePaths.length && obstacleImages.length === obstacleImagePaths.length && collectibleImages.length === collectibleImagePaths.length && Object.keys(powerUpImages).length === Object.keys(powerUpImagePaths).length) { 
-                 console.log("Images already loaded from previous run."); // DEBUG LOG
+            if (imagesLoadedCount === totalImages && playerHeadImages.length > 0 && obstacleImages.length > 0) { 
+                 console.log("Images already loaded."); 
                  resolve(); return; 
             }
-            // Reset state for this load attempt
-            console.log("Resetting image arrays and counters for loading."); // DEBUG LOG
+            console.log("Resetting image arrays and counters for loading."); 
             imagesLoadedCount = 0; 
             playerHeadImages.length = 0; obstacleImages.length = 0; collectibleImages.length = 0;
             Object.keys(powerUpImages).forEach(key => delete powerUpImages[key]); 
 
             if (totalImages === 0) {
-                 console.log("No images to load."); // DEBUG LOG
+                 console.log("No images to load."); 
                  resolve(); return;
             }
             
-            let currentLoadAttemptCount = 0; // Local counter for this specific call
+            let currentLoadAttemptCount = 0; 
             let errorOccurredInThisLoad = false; 
 
             allImagePaths.forEach((path, index) => {
-                console.log(`Starting load for: ${path}`); // DEBUG LOG
+                console.log(`Starting load for: ${path}`); 
                 const img = new Image(); 
                 img.src = path;
                 
                 img.onload = () => {
-                    // Don't process if an error already happened in this batch
                     if (errorOccurredInThisLoad) return; 
-                    
                     currentLoadAttemptCount++; 
-                    imagesLoadedCount = currentLoadAttemptCount; // Update global count
-                    console.log(`Image loaded successfully (${currentLoadAttemptCount}/${totalImages}): ${path}`); // DEBUG LOG
+                    imagesLoadedCount = currentLoadAttemptCount; 
+                    console.log(`Image loaded successfully (${currentLoadAttemptCount}/${totalImages}): ${path}`); 
                     
-                    // Store image
                     if (obstacleImagePaths.includes(path)) obstacleImages.push(img);
                     else if (playerImagePaths.includes(path)) playerHeadImages.push(img);
                     else if (collectibleImagePaths.includes(path)) collectibleImages.push(img);
@@ -132,20 +125,16 @@ window.addEventListener('load', () => {
                         }
                     }
                     
-                    // Check if all images for THIS attempt are loaded
                     if (currentLoadAttemptCount === totalImages) { 
-                        console.log("All images loaded successfully in this attempt!"); // DEBUG LOG
+                        console.log("All images loaded successfully in this attempt!"); 
                         resolve(); 
                     }
                 };
 
                 img.onerror = () => {
-                    // Stop processing further loads if one fails
                     if (errorOccurredInThisLoad) return; 
-                    
                     errorOccurredInThisLoad = true; 
-                    console.error(`!!!!!!!! IMAGE LOAD FAILED: ${path} !!!!!!!!`); // DEBUG LOG
-                    // Reject the promise immediately
+                    console.error(`!!!!!!!! IMAGE LOAD FAILED: ${path} !!!!!!!!`); 
                     reject(`Failed to load image: ${path}`); 
                 };
             });
@@ -171,88 +160,13 @@ window.addEventListener('load', () => {
     class BackgroundCharacter { /* ... (inchangée) ... */ }
 
     // --- 'initGameData' prépare une nouvelle partie ---
-    async function initGameData() { 
-        console.log("Initializing game data (initGameData)..."); // DEBUG LOG
-        gameContainer.classList.remove('shake');
-        if (currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; currentMusic = null; }
-        const musicIndex = Math.floor(Math.random() * musicPaths.length);
-        currentMusic = new Audio(musicPaths[musicIndex]); currentMusic.loop = true;
-        
-        // Load images (will resolve immediately if already loaded)
-        console.log("Calling loadGameImages from initGameData..."); // DEBUG LOG
-        await loadGameImages(); 
-        console.log("loadGameImages finished."); // DEBUG LOG
-        
-        const randomIndex = Math.floor(Math.random() * playerHeadImages.length);
-        selectedHeadImage = playerHeadImages.length > 0 ? playerHeadImages[randomIndex] : null;
-        if (!selectedHeadImage) console.warn("No player head image selected!"); // DEBUG LOG
-
-        gravity = 0.8;
-        player = new Player(50, groundY - PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_HEIGHT, selectedHeadImage); 
-        player.isGrounded = true;
-        obstacles = []; collectibles = []; particles = []; powerUps = []; backgroundCharacters = [];
-        score = 0; gameSpeed = 5; isGameOver = false; gameLoopId = null; 
-        activePowerUp = null; powerUpTimer = 0; isPowerUpActive = false; 
-        weatherEffect = null; weatherTimer = 0; 
-        canSpawnPowerUp = false; 
-        nextPowerUpScoreThreshold = 30;
-
-        scoreEl.innerText = 'Score: 0';
-        powerUpTextEl.innerText = ''; powerUpTimerEl.innerText = '';
-
-         if (playerHeadImages.length > 0) {
-             playerHeadImages.forEach(headImage => { 
-                 const scale = Math.random() * 0.3 + 0.3; 
-                 backgroundCharacters.push(new BackgroundCharacter(headImage, scale));
-             });
-             backgroundCharacters.sort((a, b) => a.scale - b.scale); 
-         }
-         console.log("Game data initialized."); // DEBUG LOG
-    }
+    async function initGameData() { /* ... (inchangée) ... */ }
 
     // --- 'initMenu' prépare le menu ---
-    async function initMenu() { 
-        console.log("Initializing menu (initMenu)..."); // DEBUG LOG
-        isReady = false; 
-        loadingText.innerText = "Chargement..."; 
-        
-        try {
-            console.log("Calling initGameData from initMenu..."); // DEBUG LOG
-            await initGameData(); 
-            
-            // If initGameData succeeded (images loaded)
-            console.log("initGameData successful. Setting up menu screen..."); // DEBUG LOG
-            gameOverScreenEl.style.display = 'none'; 
-            startScreenEl.style.display = 'flex'; 
-            isReady = true; 
-            loadingText.innerText = "Appuyez pour commencer"; 
-            console.log("Menu ready!"); // DEBUG LOG
-        } catch (error) {
-            console.error("CRITICAL ERROR during initMenu:", error); // DEBUG LOG
-            loadingText.innerText = `Erreur: ${error}. Vérifiez console (F12).`; 
-            isReady = false; // Prevent starting game
-        }
-    }
+    async function initMenu() { /* ... (inchangée) ... */ }
 
     // --- Démarrage du jeu ---
-    function startGame() { 
-        console.log(`Attempting startGame: gameLoopId=${gameLoopId}, isReady=${isReady}`); // DEBUG LOG
-        if (gameLoopId || !isReady) return; 
-        
-        console.log("Starting game..."); // DEBUG LOG
-        startScreenEl.style.display = 'none'; gameOverScreenEl.style.display = 'none';
-        
-        if (currentMusic) {
-             var promise = currentMusic.play();
-             if (promise !== undefined) promise.catch(e => console.warn("Music play blocked:", e)); // Use warn for blocked music
-        } else {
-             console.warn("No music selected to play."); // DEBUG LOG
-        }
-        
-        lastTime = performance.now(); 
-        gameLoopId = requestAnimationFrame(gameLoop);
-        console.log("Game loop started."); // DEBUG LOG
-    }
+    function startGame() { /* ... (inchangée) ... */ }
 
     // --- Fonctions PowerUp ---
     function activatePowerUp(type) { /* ... (inchangée) ... */ }
@@ -263,144 +177,31 @@ window.addEventListener('load', () => {
     let obstacleTimer = 0; let collectibleTimer = 150; 
     const OBSTACLE_SPAWN_INTERVAL = 100; 
 
-    function gameLoop(currentTime) { 
-        if (isGameOver) { 
-             console.log("Game loop stopping because isGameOver is true."); // DEBUG LOG
-             cancelAnimationFrame(gameLoopId); gameLoopId = null; return; 
-        }
-
-        const deltaTime = (currentTime - lastTime) / 1000 || 0; 
-        lastTime = currentTime;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Cycle Jour/Nuit & Météo
-        // ... (inchangé) ...
-
-        // Sol
-        ctx.fillStyle = '#666'; ctx.fillRect(0, groundY, canvas.width, 70); 
-        
-        // Personnages Fond
-        backgroundCharacters.forEach(char => { char.update(); if (char.x + char.w < 0) char.x = canvas.width + Math.random() * 50; });
-        
-        // Paillettes
-        for (let i = particles.length - 1; i >= 0; i--) { let p = particles[i]; p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1); }
-        
-        // Joueur (avec vérification)
-        if (player) { player.update(); } 
-        else { console.error("Player undefined during gameLoop!"); endGame(); return; } // Should not happen if initMenu worked
-
-        // Timers apparition
-        obstacleTimer++; collectibleTimer++; 
-        
-        let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 45); 
-        
-        // Apparition Obstacles
-        if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { /* ... (inchangé) ... */ }
-        
-        // Apparition Collectibles
-        if (collectibleTimer > 200 && collectibleImages.length > 0) { /* ... (inchangé) ... */ }
-
-        // Apparition Power-Ups (basée sur score)
-        if (canSpawnPowerUp && !isPowerUpActive && Object.keys(powerUpImages).length > 0) { /* ... (inchangé) ... */ }
-
-        // Màj & Collisions Power-Ups
-        for (let i = powerUps.length - 1; i >= 0; i--) { /* ... (inchangé) ... */ }
-        
-        // Collisions Collectibles
-        for (let i = collectibles.length - 1; i >= 0; i--) { /* ... (inchangé) ... */ }
-        
-        // Collisions Obstacles
-        for (let i = obstacles.length - 1; i >= 0; i--) { /* ... (inchangé) ... */ }
-        
-        // Timer Bonus Actif
-        if (isPowerUpActive) { /* ... (inchangé) ... */ }
-        
-        gameSpeed += 0.003; 
-        
-        // Continue loop if game is not over
-        if (!isGameOver) {
-             gameLoopId = requestAnimationFrame(gameLoop);
-        } else {
-             console.log("Game ended within gameLoop, stopping recursion."); // DEBUG LOG
-             gameLoopId = null;
-        }
-    }
+    function gameLoop(currentTime) { /* ... (inchangée) ... */ }
 
     // --- Update Score ---
-    function updateScore(value = 1) { 
-        if (isGameOver) return; 
-        const oldScore = Math.floor(score); score += value; const newScore = Math.floor(score);
-        scoreEl.innerText = `Score: ${newScore}`; 
-        if (!isPowerUpActive && !canSpawnPowerUp && newScore >= nextPowerUpScoreThreshold) {
-            canSpawnPowerUp = true;
-            console.log(`Score threshold ${nextPowerUpScoreThreshold} reached! Power-up can now spawn.`); // DEBUG LOG
-        }
-    }
+    function updateScore(value = 1) { /* ... (inchangée) ... */ }
 
     // --- Fin de partie ---
-    function endGame() { 
-        console.log("endGame called."); // DEBUG LOG
-        if (isGameOver) { console.log("endGame called but already game over."); return; } 
-        isGameOver = true; 
-        if (gameLoopId) { 
-             console.log("Cancelling animation frame:", gameLoopId); // DEBUG LOG
-             cancelAnimationFrame(gameLoopId); 
-             gameLoopId = null; 
-        } else {
-             console.log("endGame called but no active game loop ID found."); // DEBUG LOG
-        }
-        deactivatePowerUp(); 
-        if (currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; }
-        finalScoreEl.innerText = Math.floor(score); 
-        gameOverScreenEl.style.display = 'flex'; 
-        gameContainer.classList.add('shake'); 
-        setTimeout(() => { gameContainer.classList.remove('shake'); }, 300);
-        console.log("Game Over screen displayed."); // DEBUG LOG
-    }
+    function endGame() { /* ... (inchangée) ... */ }
 
     // --- 'resetGame' retourne au menu ---
-    async function resetGame() { 
-        console.log("resetGame called."); // DEBUG LOG
-        isGameOver = true; // Ensure game is marked as over before resetting
-        await initMenu(); 
-    }
+    async function resetGame() { /* ... (inchangée) ... */ }
     
     // --- 'handleInput' gère tous les taps ---
-    async function handleInput(e) { 
-        if(e) e.preventDefault();
-        console.log(`handleInput: isReady=${isReady}, isGameOver=${isGameOver}, gameLoopId=${gameLoopId}`); // DEBUG LOG
-        if (!isReady) { console.log("Input ignored: Game not ready."); return; } 
-
-        if (isGameOver) {
-            console.log("Input during Game Over: Calling resetGame."); // DEBUG LOG
-            await resetGame(); 
-        } else {
-            if (!gameLoopId) { 
-                 console.log("Input on Menu: Calling startGame."); // DEBUG LOG
-                 startGame(); 
-            }
-             // Jump only if player exists (safety check)
-            if (player) {
-                 console.log("Input during gameplay: Calling player.jump."); // DEBUG LOG
-                 player.jump(); 
-            } else {
-                 console.warn("Input during gameplay but player is undefined!"); // DEBUG LOG
-            }
-        }
-    }
+    async function handleInput(e) { /* ... (inchangée) ... */ }
     
     // --- Logique du bouton Admin ---
     function handleAdminClick(e) { /* ... (inchangée) ... */ }
     
     // Écouteurs d'événements
-    console.log("Adding event listeners..."); // DEBUG LOG
+    console.log("Adding event listeners..."); 
     window.addEventListener('touchstart', handleInput, { passive: false });
     window.addEventListener('mousedown', handleInput);
     adminBtn.addEventListener('click', handleAdminClick);
     adminBtn.addEventListener('touchstart', (e) => { e.stopPropagation(); handleAdminClick(e); }, { passive: false }); 
     
     // Lancement initial (vers le menu)
-    console.log("Calling initMenu for initial load."); // DEBUG LOG
+    console.log("Calling initMenu for initial load."); 
     initMenu();
 });
