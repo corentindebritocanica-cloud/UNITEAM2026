@@ -129,25 +129,23 @@ canvas {
     color: #333;
 }
 
-/* --- AJOUT V2.2 : Style Bouton Admin --- */
+/* Style Bouton Admin */
 #adminBtn {
-    position: absolute; /* Positionné par rapport à startScreen */
+    position: absolute; 
     bottom: 10px;
     right: 10px;
     padding: 5px 8px;
     font-size: 0.8em;
-    background-color: #6c757d; /* Gris */
+    background-color: #6c757d; 
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    opacity: 0.7; /* Un peu discret */
+    opacity: 0.7; 
 }
 #adminBtn:hover {
     opacity: 1;
 }
-/* --- FIN AJOUT --- */
-
 
 /* Animation de secousse */
 .shake {
@@ -175,7 +173,7 @@ canvas {
     text-align: left; /* Texte aligné à gauche */
     width: auto; /* Largeur automatique */
     pointer-events: none; 
-    max-width: calc(100% - 40px); /* Ajouté pour éviter dépassement */
+    max-width: calc(100% - 40px); 
 }
 
 #powerUpText {
