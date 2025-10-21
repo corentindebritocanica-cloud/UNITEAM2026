@@ -30,10 +30,10 @@ window.addEventListener('load', () => {
     // let powerUpSpawnTimer = 0; // Supprimé
     let isPowerUpActive = false; 
     let powerUpTextTimeout = null; 
-    // --- AJOUT V1.6 : Logique d'apparition des bonus par score ---
-    let canSpawnPowerUp = false; // Flag pour autoriser l'apparition
-    let nextPowerUpScoreThreshold = 30; // Seuil pour le prochain bonus
-    const POWERUP_SCORE_INTERVAL = 20; // Points à marquer entre les bonus
+    // --- Logique d'apparition des bonus par score ---
+    let canSpawnPowerUp = false; 
+    let nextPowerUpScoreThreshold = 30; 
+    const POWERUP_SCORE_INTERVAL = 20; 
     
     let weatherEffect = null; 
     let weatherTimer = 0;
@@ -59,6 +59,7 @@ window.addEventListener('load', () => {
         'perso11.png', 'perso12.png', 'perso13.png', 'perso14.png', 'perso15.png',
         'perso16.png', 'perso17.png', 'perso18.png'
     ];
+    // Utilise .PNG pour les power-ups
     const powerUpImagePaths = {
         invincible: 'chapeau.PNG',
         superJump: 'botte.PNG',
@@ -73,25 +74,177 @@ window.addEventListener('load', () => {
     const totalImages = allImagePaths.length;
 
     // Fonction pour charger TOUTES les images
-    function loadGameImages() { /* ... (inchangée) ... */ }
+    function loadGameImages() {
+        return new Promise(resolve => {
+            if (imagesLoadedCount === totalImages && playerHeadImages.length > 0) { 
+                 resolve(); return; 
+            }
+            imagesLoadedCount = 0; 
+            playerHeadImages.length = 0; obstacleImages.length = 0; collectibleImages.length = 0;
+            Object.keys(powerUpImages).forEach(key => delete powerUpImages[key]); 
+
+            if (totalImages === 0) resolve();
+            
+            let loadedCount = 0; 
+            allImagePaths.forEach(path => {
+                const img = new Image(); 
+                img.src = path;
+                img.onload = () => {
+                    if (obstacleImagePaths.includes(path)) obstacleImages.push(img);
+                    else if (playerImagePaths.includes(path)) playerHeadImages.push(img);
+                    else if (collectibleImagePaths.includes(path)) collectibleImages.push(img);
+                    else { 
+                        for (const type in powerUpImagePaths) {
+                            if (powerUpImagePaths[type] === path) {
+                                powerUpImages[type] = img; break;
+                            }
+                        }
+                    }
+                    loadedCount++; imagesLoadedCount = loadedCount;
+                    if (loadedCount === totalImages) { console.log("Images chargées !"); resolve(); }
+                };
+                img.onerror = () => {
+                    console.error(`Erreur chargement : ${path}`); 
+                    loadedCount++; imagesLoadedCount = loadedCount;
+                    if (loadedCount === totalImages) resolve();
+                };
+            });
+        });
+    }
 
     // --- Classe Particule ---
-    class Particle { /* ... (inchangée) ... */ }
+    class Particle { 
+        constructor(x, y, color) {
+            this.x = x; this.y = y; this.color = color;
+            this.size = Math.random() * 4 + 3; 
+            this.vx = -gameSpeed / 3; 
+            this.vy = (Math.random() - 0.5) * 2; 
+            this.life = 40; 
+            this.gravity = 0.1;
+        }
+        update() { this.life--; this.vy += this.gravity; this.x += this.vx; this.y += this.vy; }
+        draw() {
+            ctx.fillStyle = this.color; ctx.globalAlpha = Math.max(0, this.life / 40); 
+            ctx.fillRect(this.x, this.y, this.size, this.size);
+            ctx.globalAlpha = 1.0; 
+        }
+    }
 
     // --- CLASSE PLAYER ---
-    class Player { /* ... (inchangée) ... */ }
+    class Player {
+        constructor(x, y, w, h, image) {
+            this.x = x; this.y = y; this.w = w; this.h = h; this.image = image;
+            this.dy = 0; this.baseJumpPower = 15; this.jumpPower = this.baseJumpPower;
+            this.isGrounded = false; this.jumpCount = 0; this.maxJumps = 2; 
+            this.isInvincible = false;
+        }
+        draw() { 
+            if (this.isInvincible && Math.floor(Date.now() / 100) % 2 === 0) { /* Clignote */ } 
+            else if (this.image) { ctx.drawImage(this.image, this.x, this.y, this.w, this.h); } 
+            else { ctx.fillStyle = '#007bff'; ctx.fillRect(this.x, this.y, this.w, this.h); }
+        }
+        emitParticles(colorOverride = null) { 
+            if (gameLoopId && !isGameOver) {
+                 const colors = ['#FFD700', '#FFFFFF', '#C0C0C0', '#FFEC8B'];
+                 const color = colorOverride || colors[Math.floor(Math.random() * colors.length)];
+                 const x = this.x + this.w / 2; const y = this.y + this.h / 2;
+                 particles.push(new Particle(x, y, color));
+            }
+        }
+        update() {
+            this.dy += gravity; this.y += this.dy;
+            if (this.y + this.h >= groundY) { 
+                this.y = groundY - this.h; this.dy = 0; 
+                if (!this.isGrounded) { this.jumpCount = 0; }
+                this.isGrounded = true;
+            } else { this.isGrounded = false; }
+            this.draw(); this.emitParticles();
+        }
+        jump() {
+            if (this.jumpCount < this.maxJumps) { 
+                this.dy = -this.jumpPower; this.jumpCount++; this.isGrounded = false; 
+            }
+        }
+    }
     
     // --- CLASSE OBSTACLE ---
-    class Obstacle { /* ... (inchangée) ... */ }
+    class Obstacle { 
+        constructor(x, y, image, w, h) { 
+            this.x = x; this.y = y; this.w = w || image.width; this.h = h || image.height;
+            this.image = image; this.initialY = y;
+            this.verticalSpeed = (Math.random() < 0.1) ? (Math.random() * 0.8 - 0.4) : 0; 
+            this.verticalRange = 15;
+        }
+        draw() { ctx.drawImage(this.image, this.x, this.y, this.w, this.h); }
+        update() { 
+            this.x -= gameSpeed; 
+            if (this.verticalSpeed !== 0) {
+                this.y += this.verticalSpeed;
+                if (this.y < this.initialY - this.verticalRange || this.y > this.initialY + this.verticalRange) {
+                    this.verticalSpeed *= -1;
+                }
+            }
+            this.draw(); 
+        }
+    }
 
     // --- CLASSE COLLECTIBLE ---
-    class Collectible { /* ... (inchangée) ... */ }
+    class Collectible { 
+        constructor(x, y, image, w, h) { 
+            this.x = x; this.y = y; this.w = w; this.h = h; this.image = image; 
+        }
+        draw() { ctx.drawImage(this.image, this.x, this.y, this.w, this.h); }
+        update() { 
+            if (activePowerUp === 'magnet') {
+                const dx = player.x + player.w / 2 - (this.x + this.w / 2);
+                const dy = player.y + player.h / 2 - (this.y + this.h / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 150) { this.x += dx * 0.05; this.y += dy * 0.05; }
+            }
+            this.x -= gameSpeed; this.draw(); 
+        }
+     }
 
     // --- CLASSE POWERUP ---
-    class PowerUp { /* ... (inchangée) ... */ }
+    class PowerUp { 
+        constructor(x, y, type) {
+            this.type = type; this.image = powerUpImages[type];
+            if (!this.image) return null; 
+            this.w = 40; this.h = (this.image.height / this.image.width) * this.w;
+            this.x = x; this.y = y; this.initialY = y; this.angle = Math.random() * Math.PI * 2;
+        }
+        draw() { if (this.image) ctx.drawImage(this.image, this.x, this.y, this.w, this.h); }
+        update() {
+            this.x -= gameSpeed; this.angle += 0.05;
+            this.y = this.initialY + Math.sin(this.angle) * 15; 
+            this.draw();
+        }
+    }
 
      // --- CLASSE BACKGROUND CHARACTER ---
-    class BackgroundCharacter { /* ... (inchangée) ... */ }
+    class BackgroundCharacter {
+        constructor(image, scale) {
+            this.image = image; this.scale = scale; 
+            this.w = PLAYER_WIDTH * this.scale; this.h = PLAYER_HEIGHT * this.scale;
+            this.x = canvas.width + Math.random() * canvas.width; 
+            this.baseY = groundY - this.h - Math.random() * 20; this.y = this.baseY;
+            this.speed = gameSpeed * (0.1 + (scale - 0.3) * 0.3); 
+            this.bounceAngle = Math.random() * Math.PI * 2; 
+            this.bounceSpeed = 0.05 + Math.random() * 0.03;
+        }
+        draw() {
+             ctx.globalAlpha = 0.4 + (this.scale - 0.3) * 0.5; 
+             ctx.drawImage(this.image, this.x, this.y, this.w, this.h);
+             ctx.globalAlpha = 1.0;
+        }
+        update() {
+            this.x -= this.speed;
+            this.speed = gameSpeed * (0.1 + (this.scale - 0.3) * 0.3); 
+            this.bounceAngle += this.bounceSpeed;
+            this.y = this.baseY + Math.sin(this.bounceAngle) * 5; 
+            this.draw();
+        }
+    }
 
     // --- 'initGameData' prépare une nouvelle partie ---
     async function initGameData() { 
@@ -111,13 +264,14 @@ window.addEventListener('load', () => {
         score = 0; gameSpeed = 5; isGameOver = false; gameLoopId = null; 
         activePowerUp = null; powerUpTimer = 0; isPowerUpActive = false; 
         weatherEffect = null; weatherTimer = 0; 
-        // --- AJOUT V1.6 : Réinitialiser la logique des bonus ---
+        // Réinitialiser la logique des bonus par score
         canSpawnPowerUp = false; 
         nextPowerUpScoreThreshold = 30;
 
         scoreEl.innerText = 'Score: 0';
         powerUpTextEl.innerText = ''; powerUpTimerEl.innerText = '';
 
+         // Tous les personnages en fond
          if (playerHeadImages.length > 0) {
              playerHeadImages.forEach(headImage => { 
                  const scale = Math.random() * 0.3 + 0.3; 
@@ -128,17 +282,30 @@ window.addEventListener('load', () => {
     }
 
     // --- 'initMenu' prépare le menu ---
-    async function initMenu() { /* ... (inchangée) ... */ }
+    async function initMenu() { 
+        isReady = false; loadingText.innerText = "Chargement..."; 
+        // gameContainer.classList.remove('in-game'); // Logo fixe
+        await initGameData(); 
+        gameOverScreenEl.style.display = 'none'; startScreenEl.style.display = 'flex'; 
+        isReady = true; loadingText.innerText = "Appuyez pour commencer"; 
+    }
 
     // --- Démarrage du jeu ---
-    function startGame() { /* ... (inchangée) ... */ }
+    function startGame() { 
+        if (gameLoopId || !isReady) return; 
+        // gameContainer.classList.add('in-game'); // Logo fixe
+        startScreenEl.style.display = 'none'; gameOverScreenEl.style.display = 'none';
+        var promise = currentMusic.play();
+        if (promise !== undefined) promise.catch(e => console.log("Musique bloquée:", e));
+        lastTime = performance.now(); 
+        gameLoopId = requestAnimationFrame(gameLoop);
+    }
 
-    // --- Fonctions PowerUp (Modifiée) ---
+    // --- Fonctions PowerUp ---
     function activatePowerUp(type) {
         if (isPowerUpActive) return; 
         isPowerUpActive = true; activePowerUp = type; powerUpTimer = powerUpDuration; 
-        // --- AJOUT V1.6 : Empêche un nouveau spawn tant que celui-ci est actif ---
-        canSpawnPowerUp = false; 
+        canSpawnPowerUp = false; // Empêche nouveau spawn
 
         clearTimeout(powerUpTextTimeout); powerUpTextEl.classList.remove('fade-out'); 
         powerUpTextEl.innerText = ''; 
@@ -161,13 +328,12 @@ window.addEventListener('load', () => {
         powerUpTextEl.innerText = ''; powerUpTimerEl.innerText = '';
         powerUpTextEl.classList.remove('fade-out'); 
         clearTimeout(powerUpTextTimeout); 
-        // --- AJOUT V1.6 : Définit le seuil pour le prochain bonus ---
+        // Définit le seuil pour le prochain bonus
         nextPowerUpScoreThreshold = Math.floor(score) + POWERUP_SCORE_INTERVAL; 
         console.log("Prochain bonus possible à partir de score :", nextPowerUpScoreThreshold);
     }
     
     // --- Boucle de jeu principale ---
-    let lastTime = 0; 
     let obstacleTimer = 0; let collectibleTimer = 150; 
     const OBSTACLE_SPAWN_INTERVAL = 100; 
 
@@ -180,7 +346,8 @@ window.addEventListener('load', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Cycle Jour/Nuit & Météo
-        // ... (inchangé) ...
+        const dayNightProgress = (score % 500) / 500; const nightOpacity = Math.sin(dayNightProgress * Math.PI) * 0.7; ctx.fillStyle = `rgba(0, 0, 50, ${nightOpacity})`; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        weatherTimer += deltaTime; if (weatherTimer > 30) { weatherTimer = 0; weatherEffect = (Math.random() < 0.3) ? 'rain' : null;} if (weatherEffect === 'rain') { ctx.fillStyle = 'rgba(100, 100, 200, 0.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = 'rgba(200, 200, 255, 0.7)'; for (let i = 0; i < 30; i++) { let rainX = Math.random() * canvas.width; let rainY = (Date.now() * 0.1 + i * 100) % canvas.height; ctx.fillRect(rainX, rainY, 1, 5); }}
 
         // Sol
         ctx.fillStyle = '#666'; ctx.fillRect(0, groundY, canvas.width, 70); 
@@ -195,58 +362,94 @@ window.addEventListener('load', () => {
 
         // Timers apparition
         obstacleTimer++; collectibleTimer++; 
-        // powerUpSpawnTimer++; // Supprimé
+        // Le spawn de powerup est géré par le score maintenant
 
         let spawnInterval = Math.max(OBSTACLE_SPAWN_INTERVAL - (gameSpeed * 5), 45); 
         
         // Apparition Obstacles
-        if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { /* ... (inchangé) ... */ }
+        if (obstacleTimer > spawnInterval && obstacleImages.length > 0) { 
+            const cactusImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+            let w = 50; let h = (cactusImg.height / cactusImg.width) * w; if (h > 80) { h = 80; w = (cactusImg.width / cactusImg.height) * h; } 
+            obstacles.push(new Obstacle(canvas.width, groundY - h, cactusImg, w, h));
+            if (Math.random() < 0.1) { 
+                 const cactusImg2 = obstacleImages[Math.floor(Math.random() * obstacleImages.length)]; let w2 = 40; let h2 = (cactusImg2.height / cactusImg2.width) * w2; if (h2 > 60) h2 = 60;
+                 obstacles.push(new Obstacle(canvas.width + w + 90 + Math.random() * 60, groundY - h2, cactusImg2, w2, h2)); 
+            }
+            obstacleTimer = 0 - (Math.random() * 20); 
+        }
         
         // Apparition Collectibles
-        if (collectibleTimer > 200 && collectibleImages.length > 0) { /* ... (inchangé) ... */ }
+        if (collectibleTimer > 200 && collectibleImages.length > 0) { const noteImg = collectibleImages[0]; const y = groundY - 120 - (Math.random() * 100); collectibles.push(new Collectible(canvas.width, y, noteImg, 30, 30)); collectibleTimer = 0; }
 
-        // --- AJOUT V1.6 : Apparition des Power-Ups (basée sur le score) ---
-        // On vérifie si on *peut* en faire apparaître un et s'il n'y en a pas déjà un en cours
+        // Apparition Power-Ups (basée sur score)
         if (canSpawnPowerUp && !isPowerUpActive && Object.keys(powerUpImages).length > 0) {
-             // 5% de chance par frame de le faire apparaître (pour éviter qu'il pop instantanément)
-             if (Math.random() < 0.05) { 
+             if (Math.random() < 0.05) { // Chance de pop une fois le seuil atteint
                  const types = Object.keys(powerUpImages); 
                  const randomType = types[Math.floor(Math.random() * types.length)]; 
                  const y = groundY - 80 - (Math.random() * 80); 
                  const newPowerUp = new PowerUp(canvas.width, y, randomType); 
                  if (newPowerUp && newPowerUp.image) {
                      powerUps.push(newPowerUp);
-                     canSpawnPowerUp = false; // On a fait apparaître, on attend le prochain seuil
+                     canSpawnPowerUp = false; 
                      console.log("Power-Up apparu:", randomType);
                  }
              }
         }
 
         // Màj & Collisions Power-Ups
-        for (let i = powerUps.length - 1; i >= 0; i--) { /* ... (inchangé) ... */ }
+        for (let i = powerUps.length - 1; i >= 0; i--) { 
+            let pu = powerUps[i]; pu.update(); 
+            if (player.x < pu.x + pu.w && player.x + player.w > pu.x && player.y < pu.y + pu.h && player.y + player.h > pu.y) { 
+                 activatePowerUp(pu.type); 
+                 for(let k=0; k<10; k++) player.emitParticles('#FFD700'); 
+                 powerUps.splice(i, 1); 
+            } else if (pu.x + pu.w < 0) powerUps.splice(i, 1); 
+        }
         
         // Collisions Collectibles
-        for (let i = collectibles.length - 1; i >= 0; i--) { /* ... (inchangé) ... */ }
+        for (let i = collectibles.length - 1; i >= 0; i--) { 
+            let coll = collectibles[i]; coll.update(); 
+            if (player.x < coll.x + coll.w && player.x + player.w > coll.x && player.y < coll.y + coll.h && player.y + player.h > coll.y) { 
+                 updateScore(10); 
+                 for(let k=0; k<5; k++) player.emitParticles(); 
+                 collectibles.splice(i, 1); 
+            } else if (coll.x + coll.w < 0) collectibles.splice(i, 1); 
+        }
         
         // Collisions Obstacles
-        for (let i = obstacles.length - 1; i >= 0; i--) { /* ... (inchangé) ... */ }
+        for (let i = obstacles.length - 1; i >= 0; i--) { 
+             let obs = obstacles[i]; obs.update(); 
+             if (!player.isInvincible) {
+                 const playerHitbox = {x: player.x + 5, y: player.y + 5, w: player.w - 10, h: player.h - 10}; 
+                 const obsHitbox = {x: obs.x + 5, y: obs.y + 5, w: obs.w - 10, h: obs.h - 10}; 
+                 if (playerHitbox.x < obsHitbox.x + obsHitbox.w && playerHitbox.x + playerHitbox.w > obsHitbox.x && playerHitbox.y < obs.y + obs.h && playerHitbox.y + playerHitbox.h > obs.y) { 
+                      endGame(); return; 
+                 } 
+             }
+             if (obs.x + obs.w < 0) { obstacles.splice(i, 1); updateScore(1); } 
+        }
         
         // Timer Bonus Actif
-        if (isPowerUpActive) { /* ... (inchangé) ... */ }
+        if (isPowerUpActive) {
+             powerUpTimer -= deltaTime; 
+             powerUpTimerEl.innerText = `Temps restant: ${Math.max(0, powerUpTimer).toFixed(1)}s`;
+             if (powerUpTimer <= 0) {
+                 deactivatePowerUp();
+             }
+        }
         
         gameSpeed += 0.003; 
         
         if (!isGameOver) gameLoopId = requestAnimationFrame(gameLoop);
     }
 
-    // --- MODIFIÉ V1.6 : Vérifie si le seuil de score pour le bonus est atteint ---
+    // Update Score (vérifie seuil bonus)
     function updateScore(value = 1) { 
         const oldScore = Math.floor(score);
         score += value; 
         const newScore = Math.floor(score);
         scoreEl.innerText = `Score: ${newScore}`; 
 
-        // Vérifie si on a atteint ou dépassé le seuil pour le prochain bonus
         if (!isPowerUpActive && !canSpawnPowerUp && newScore >= nextPowerUpScoreThreshold) {
             canSpawnPowerUp = true;
             console.log("Seuil de score atteint ! Bonus possible.");
@@ -254,13 +457,32 @@ window.addEventListener('load', () => {
     }
 
     // --- Fin de partie ---
-    function endGame() { /* ... (inchangée) ... */ }
+    function endGame() { 
+        if (isGameOver) return; 
+        isGameOver = true; if (gameLoopId) { cancelAnimationFrame(gameLoopId); gameLoopId = null; }
+        deactivatePowerUp(); 
+        if (currentMusic) { currentMusic.pause(); currentMusic.currentTime = 0; }
+        finalScoreEl.innerText = Math.floor(score); gameOverScreenEl.style.display = 'flex'; 
+        gameContainer.classList.add('shake'); setTimeout(() => { gameContainer.classList.remove('shake'); }, 300);
+    }
 
     // --- 'resetGame' retourne au menu ---
-    async function resetGame() { /* ... (inchangée) ... */ }
+    async function resetGame() { 
+        isGameOver = true; 
+        await initMenu(); 
+    }
     
     // --- 'handleInput' gère tous les taps ---
-    async function handleInput(e) { /* ... (inchangée) ... */ }
+    async function handleInput(e) { 
+        if(e) e.preventDefault();
+        if (!isReady) return; 
+        if (isGameOver) {
+            await resetGame(); 
+        } else {
+            if (!gameLoopId) { startGame(); }
+            player.jump(); 
+        }
+    }
     
     // Écouteurs d'événements
     window.addEventListener('touchstart', handleInput, { passive: false });
