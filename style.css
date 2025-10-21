@@ -140,4 +140,36 @@ canvas {
   20%, 80% { transform: translate3d(2px, 0, 0); }
   30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
   40%, 60% { transform: translate3d(4px, 0, 0); }
-} /* <-- The file MUST end exactly here */
+}
+
+/* --- MODIFIÉ V1.9 : Retour en haut à gauche --- */
+#powerUpInfo {
+    position: absolute;
+    top: 60px; /* Sous le score */
+    left: 20px; /* Alignement à gauche */
+    /* transform: translateX(-50%); Supprimé */
+    z-index: 10;
+    color: #FFFFFF;
+    text-shadow: 2px 2px 4px #000000;
+    font-size: 1.2em; /* Taille d'origine */
+    font-weight: bold;
+    text-align: left; /* Texte aligné à gauche */
+    width: auto; /* Largeur automatique */
+    pointer-events: none; 
+    max-width: calc(100% - 40px); /* Ajouté pour éviter dépassement */
+}
+
+#powerUpText {
+    margin-bottom: 5px; /* Espace d'origine */
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}
+#powerUpText.fade-out {
+    opacity: 0;
+}
+
+#powerUpTimer {
+    font-size: 1em; /* Taille d'origine */
+    color: #FFD700; 
+}
+/* --- FIN MODIFICATION --- */
