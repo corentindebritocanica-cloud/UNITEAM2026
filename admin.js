@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const gallery = document.getElementById('imageGallery');
 
-    // Liste EXACTE de toutes les images utilisées dans le jeu (V2.2)
+    // Liste EXACTE V2.5 (avec .png minuscule pour powerups)
     const allImagePaths = [
         // Fond & Logo
         'FOND DE PLAN.jpg',
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'cactus1.png', 'cactus2.png', 'cactus3.png', 'cactus4.png',
         // Collectible
         'note.png',
-        // Power-ups (.png minuscule ici aussi, car c'est ce qu'on veut à terme)
+        // Power-ups (.png MINUSCULE)
         'chapeau.png', 'botte.png', 'aimant.png', 
         // Têtes Joueurs
         'perso1.png', 'perso2.png', 'perso3.png', 'perso4.png', 'perso5.png',
@@ -29,29 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
         itemDiv.classList.add('image-item');
 
         const img = document.createElement('img');
-        img.src = path; // Le navigateur cherche l'image
+        img.src = path; 
 
         const caption = document.createElement('p');
-        caption.textContent = path; // Affiche le nom du fichier
+        caption.textContent = path; 
 
-        // Gestionnaire d'erreur si l'image ne se charge pas
         img.onerror = () => {
             console.error(`Impossible de charger : ${path}`);
-            img.style.display = 'none'; // Cache l'icône d'image cassée
+            img.style.display = 'none'; 
             caption.style.color = 'red';
             caption.style.fontWeight = 'bold';
             caption.textContent = `${path} (ERREUR)`;
-             // Optionnel : Ajouter un message d'erreur plus visible
-            // const errorMsg = document.createElement('div');
-            // errorMsg.classList.add('error');
-            // errorMsg.textContent = 'Erreur!';
-            // itemDiv.appendChild(errorMsg);
         };
         
-        // Gestionnaire de succès (optionnel, pour vérifier la taille par ex.)
         img.onload = () => {
              console.log(`Chargé avec succès : ${path}`);
-             // Ici, tu pourrais ajouter des vérifications, par ex. si l'image est bien transparente
         };
 
         itemDiv.appendChild(img);
