@@ -2,54 +2,90 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>UNITEAM ADVENTURE</title> 
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accès restreint</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        img {
+            max-width: 200px; /* Ajustez la taille du logo si besoin */
+            margin-bottom: 20px;
+        }
+        input[type="password"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
 
-    <div class="game-container">
-        <div id="version">V1.7</div> 
-
-        <div id="score">Score: 0</div>
+    <div class="container">
+        <img src="uniteamadventure.png" alt="Logo Unité Aventure">
         
-        <canvas id="gameCanvas"></canvas>
+        <h3>Veuillez entrer le mot de passe</h3>
         
-        <div id="startScreen">
-             <img src="uniteamadventure.png" alt="UNITEAM ADVENTURE" id="gameLogo">
-            <p id="loadingText">Chargement...</p>
-
-            <div id="powerUpExplanation">
-                <h3>Bonus :</h3>
-                <div class="power-up-item">
-                    <img src="chapeau.PNG" alt="Chapeau" class="power-up-icon"> 
-                    <p class="power-up-desc">Invincible (5s)</p>
-                </div>
-                <div class="power-up-item">
-                    <img src="botte.PNG" alt="Botte" class="power-up-icon"> 
-                    <p class="power-up-desc">Super Saut (5s)</p>
-                </div>
-                <div class="power-up-item">
-                    <img src="aimant.PNG" alt="Aimant" class="power-up-icon"> 
-                    <p class="power-up-desc">Aimant à Notes (5s)</p>
-                </div>
-            </div>
-
-        </div>
-
-        <div id="gameOverScreen">
-            <h1>Game Over</h1> 
-            <p>Score final: <span id="finalScore">0</span></p>
-            <p>Appuyez pour recommencer</p>
-        </div>
-
-        <div id="powerUpInfo">
-            <div id="powerUpText"></div>
-            <div id="powerUpTimer"></div>
-        </div>
-
+        <input type="password" id="passwordInput" placeholder="Mot de passe">
+        
+        <button onclick="checkPassword()">Valider</button>
     </div>
 
-    <script src="game.js"></script>
+    <script>
+        function checkPassword() {
+            // 1. Récupérer la valeur entrée par l'utilisateur
+            let input = document.getElementById('passwordInput').value;
+
+            // 2. Le mot de passe correct (visible par tous !)
+            // Nous le mettons en majuscules pour la comparaison
+            const correctPassword = 'UNITEAM'; 
+
+            // 3. Comparer l'entrée (mise en majuscules) avec le mot de passe
+            // .toUpperCase() permet d'accepter "uniteam", "UNITEAM", "Uniteam", etc.
+            if (input.toUpperCase() === correctPassword) {
+                
+                // 4. Si correct, redirection vers le site
+                window.location.href = 'https://corentindebritocanica-cloud.github.io/UNITEAM-ADVENTURE/';
+
+            } else {
+                // 5. Si incorrect, afficher une alerte
+                alert('Mot de passe incorrect.');
+            }
+        }
+
+        // Bonus : Permet de valider en appuyant sur "Entrée"
+        document.getElementById('passwordInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                checkPassword();
+            }
+        });
+    </script>
+
 </body>
 </html>
