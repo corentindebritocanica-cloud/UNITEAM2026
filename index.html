@@ -51,6 +51,8 @@
             height: 40px;
             margin-left: 5px;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            /* NOUVEAU : Curseur "pointer" pour montrer qu'on peut skipper */
+            cursor: pointer; 
         }
         .heart.hidden {
             transform: scale(0.5);
@@ -86,26 +88,26 @@
             height: 80px;
             object-fit: contain;
             z-index: 10;
-            transition: left 0.3s ease-in-out, top 0.3s ease-in-out, transform 0.2s ease-out; /* Plus rapide ! */
+            transition: left 0.3s ease-in-out, top 0.3s ease-in-out, transform 0.2s ease-out;
         }
         #movingHat:hover {
             transform: scale(1.1);
         }
 
-        /* NOUVEAU : Style pour la trainée de paillettes (Idée Traînée) */
+        /* Style pour la trainée de paillettes */
         #hatTrail {
             position: absolute;
-            width: 40px; /* Moitié de la taille du chapeau */
+            width: 40px;
             height: 40px;
-            background-color: gold; /* Couleur de base */
+            background-color: gold;
             border-radius: 50%;
             opacity: 0;
-            filter: blur(8px); /* Effet de flou pour simuler des paillettes */
-            z-index: 9; /* Derrière le chapeau */
+            filter: blur(8px);
+            z-index: 9;
             transition: left 0.3s ease-in-out, top 0.3s ease-in-out, opacity 0.3s ease-out;
         }
         #hatTrail.show {
-            opacity: 0.6; /* Rend la trainée visible */
+            opacity: 0.6;
         }
 
 
@@ -206,10 +208,11 @@
         // Références aux éléments
         const loginBox = document.getElementById('loginBox');
         const movingHat = document.getElementById('movingHat');
-        const hatTrail = document.getElementById('hatTrail'); // NOUVEAU
+        const hatTrail = document.getElementById('hatTrail');
         const messageElement = document.getElementById('message');
         const flashOverlay = document.getElementById('flashOverlay');
         const hearts = document.querySelectorAll('.heart');
+        const livesContainer = document.getElementById('livesContainer'); // NOUVEAU
         
         // Variables du jeu
         let hatLives = 3;
@@ -262,20 +265,17 @@
             const viewportHeight = window.innerHeight;
             const hatWidth = 80; 
             const hatHeight = 80;
-
             const margin = 20;
             const newX = Math.random() * (viewportWidth - hatWidth - margin * 2) + margin;
             const newY = Math.random() * (viewportHeight - hatHeight - margin * 2) + margin;
 
-            // NOUVEAU : Met à jour la position de la traînée avant celle du chapeau
             hatTrail.style.left = `${movingHat.offsetLeft + hatWidth / 2 - hatTrail.offsetWidth / 2}px`;
             hatTrail.style.top = `${movingHat.offsetTop + hatHeight / 2 - hatTrail.offsetHeight / 2}px`;
-            hatTrail.classList.add('show'); // Rend la traînée visible
+            hatTrail.classList.add('show');
             
-            // Fait disparaître la traînée après un court délai pour l'effet "traînée"
             setTimeout(() => {
                 hatTrail.classList.remove('show');
-            }, 300); // Doit correspondre à la transition CSS du chapeau
+            }, 300);
 
             movingHat.style.left = `${newX}px`;
             movingHat.style.top = `${newY}px`;
@@ -287,56 +287,62 @@
             setTimeout(() => flashOverlay.classList.remove('flash'), 300);
         }
 
-        // NOUVEAU : Fonction pour le petit feu d'artifice de paillettes (Idée Feu d'artifice)
+        // Fonction pour le petit feu d'artifice de paillettes
         function triggerSparkleConfetti(x, y) {
             confetti({
-                particleCount: 30, // Petit nombre de particules
-                spread: 60,        // Dispersion moyenne
-                startVelocity: 30, // Vitesse de départ
+                particleCount: 30, spread: 60, startVelocity: 30,
                 origin: { 
-                    x: x / window.innerWidth, // Position X normalisée
-                    y: y / window.innerHeight // Position Y normalisée
+                    x: x / window.innerWidth,
+                    y: y / window.innerHeight
                 },
-                colors: ['#FFD700', '#DAA520', '#FFECB3'], // Couleurs dorées
-                disableForReducedMotion: true // Bonne pratique d'accessibilité
+                colors: ['#FFD700', '#DAA520', '#FFECB3'],
+                disableForReducedMotion: true
             });
         }
 
+        // NOUVEAU : Fonction unique pour arrêter le jeu et montrer le formulaire
+        function showLoginForm() {
+            clearInterval(hatMoveInterval); // Arrête le mouvement
+            movingHat.style.display = 'none'; // Cache le chapeau
+            hatTrail.style.display = 'none'; // Cache la traînée
+            livesContainer.style.display = 'none'; // Cache les cœurs
+
+            loginBox.classList.add('visible'); // Affiche le formulaire
+            messageElement.textContent = 'Veuillez entrer le mot de passe';
+            document.getElementById('passwordInput').focus();
+        }
 
         // Gérer le clic sur le chapeau
-        movingHat.addEventListener('click', (event) => { // On passe l'objet event
+        movingHat.addEventListener('click', (event) => {
             hatLives--; 
             triggerFlash(); 
-
-            // NOUVEAU : Déclenche le feu d'artifice à la position du clic
             triggerSparkleConfetti(event.clientX, event.clientY);
 
             if (hearts[hatLives]) {
                 hearts[hatLives].classList.add('hidden');
             }
 
+            // NOUVEAU : Appel de la fonction centralisée
             if (hatLives <= 0) {
-                clearInterval(hatMoveInterval); 
-                movingHat.style.display = 'none'; 
-                hatTrail.style.display = 'none'; // Cache la traînée aussi
-
-                loginBox.classList.add('visible'); 
-                messageElement.textContent = 'Veuillez entrer le mot de passe';
-                document.getElementById('passwordInput').focus();
+                showLoginForm(); 
             } else {
                 moveHat();
-                // NOUVEAU : Intervalle de mouvement encore plus rapide (500ms)
                 clearInterval(hatMoveInterval);
                 hatMoveInterval = setInterval(moveHat, 500); 
             }
         });
 
+        // NOUVEAU : Logique pour skipper le jeu en cliquant sur un cœur
+        hearts.forEach(heart => {
+            heart.addEventListener('click', () => {
+                showLoginForm(); // Appelle la même fonction de fin de jeu
+            });
+        });
+
         // Démarrage du jeu
         loginBox.classList.remove('visible');
-        
-        // Intervalle de mouvement initial (500ms pour un départ rapide)
         hatMoveInterval = setInterval(moveHat, 500); 
-        moveHat(); // Positionne le chapeau une première fois
+        moveHat(); 
 
         // --- Génération des particules (inchangée) ---
         const particleContainer = document.getElementById('particleContainer');
