@@ -11,75 +11,166 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
             margin: 0;
             text-align: center;
+            overflow: hidden;
+
+            /* IDÉE 1 (Nouvelle) : Arrière-plan en dégradé animé */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
         }
+
         .container {
             background: #fff;
-            padding: 30px;
+            padding: 30px 40px;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
+
         img {
-            max-width: 200px; /* Ajustez la taille du logo si besoin */
+            max-width: 200px;
             margin-bottom: 20px;
+            /* IDÉE 2 (Ancienne) : Logo qui flotte */
+            animation: float 3s ease-in-out infinite;
         }
-        input[type="password"] {
+
+        h3 {
+            color: #333;
+        }
+
+        input[type="password"], input[type="text"] {
             padding: 10px;
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            width: 220px;
         }
+        
         button {
             padding: 10px 20px;
             font-size: 16px;
-            background-color: #007bff;
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            transition: background-color 0.3s;
+            /* IDÉE 3 (Nouvelle) : Bouton qui pulse */
+            animation: pulse 2s infinite;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #2980b9;
+        }
+
+        /* IDÉE 2 (Nouvelle) : Style pour la case "Afficher mdp" */
+        .show-pass {
+            font-size: 14px;
+            color: #555;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .show-pass input {
+            vertical-align: middle;
+            margin-top: 0;
+        }
+
+        /* --- Animations --- */
+
+        /* IDÉE 1 (Ancienne) : Tremblement */
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); } 10% { transform: translateX(-10px); } 20% { transform: translateX(10px); } 30% { transform: translateX(-10px); } 40% { transform: translateX(10px); } 50% { transform: translateX(-10px); } 60% { transform: translateX(10px); } 70% { transform: translateX(-10px); } 80% { transform: translateX(10px); } 90% { transform: translateX(-10px); } 100% { transform: translateX(0); }
+        }
+
+        /* IDÉE 2 (Ancienne) : Flottement */
+        @keyframes float {
+            0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); }
+        }
+
+        /* IDÉE 1 (Nouvelle) : Dégradé */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; }
+        }
+        
+        /* IDÉE 3 (Nouvelle) : Pulsation */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="loginBox">
+        
         <img src="uniteamadventure.png" alt="Logo Unité Aventure">
         
-        <h3>Veuillez entrer le mot de passe</h3>
+        <h3 id="message">Veuillez entrer le mot de passe</h3>
         
         <input type="password" id="passwordInput" placeholder="Mot de passe">
         
+        <span class="show-pass">
+            <input type="checkbox" id="showPassword" onclick="togglePassword()">
+            <label for="showPassword">Afficher</label>
+        </span>
+        
+        <br><br>
         <button onclick="checkPassword()">Valider</button>
     </div>
 
     <script>
-        function checkPassword() {
-            // 1. Récupérer la valeur entrée par l'utilisateur
-            let input = document.getElementById('passwordInput').value;
-
-            // 2. Le mot de passe correct (visible par tous !)
-            // Nous le mettons en majuscules pour la comparaison
-            const correctPassword = 'UNITEAM'; 
-
-            // 3. Comparer l'entrée (mise en majuscules) avec le mot de passe
-            // .toUpperCase() permet d'accepter "uniteam", "UNITEAM", "Uniteam", etc.
-            if (input.toUpperCase() === correctPassword) {
-                
-                // 4. Si correct, redirection vers le site
-                window.location.href = 'https://corentindebritocanica-cloud.github.io/UNITEAM-ADVENTURE/';
-
+        // IDÉE 2 (Nouvelle) : Fonction pour afficher/cacher le mot de passe
+        function togglePassword() {
+            var passInput = document.getElementById('passwordInput');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
             } else {
-                // 5. Si incorrect, afficher une alerte
-                alert('Mot de passe incorrect.');
+                passInput.type = 'password';
             }
         }
 
-        // Bonus : Permet de valider en appuyant sur "Entrée"
+        function checkPassword() {
+            let input = document.getElementById('passwordInput').value;
+            let loginBox = document.getElementById('loginBox');
+            let message = document.getElementById('message');
+            
+            const correctPassword = 'UNITEAM';
+
+            // 1. Vérification du bon mot de passe
+            if (input.toUpperCase() === correctPassword) {
+                
+                message.textContent = 'Accès autorisé ! Redirection...';
+                message.style.color = 'green';
+                loginBox.style.borderColor = 'green';
+
+                setTimeout(() => {
+                    window.location.href = 'https://corentindebritocanica-cloud.github.io/UNITEAM-ADVENTURE/';
+                }, 1000);
+
+            // 2. Mot de passe incorrect
+            } else {
+                
+                message.textContent = 'Mot de passe incorrect.';
+                message.style.color = 'red';
+                triggerShake(); // On déclenche l'animation de tremblement
+            }
+        }
+
+        // IDÉE 1 (Ancienne) : Fonction pour déclencher le tremblement
+        function triggerShake() {
+            let loginBox = document.getElementById('loginBox');
+            loginBox.classList.add('shake');
+
+            setTimeout(() => {
+                loginBox.classList.remove('shake');
+            }, 500); 
+        }
+
+        // Valider avec "Entrée"
         document.getElementById('passwordInput').addEventListener('keyup', function(event) {
             if (event.key === 'Enter') {
                 checkPassword();
