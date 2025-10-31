@@ -9,7 +9,7 @@
 
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Police un peu plus moderne */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,43 +18,101 @@
             text-align: center;
             overflow: hidden;
             
-            /* Arrière-plan dégradé animé (toujours là) */
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
-            position: relative; /* Pour positionner les particules */
+            position: relative;
         }
 
-        /* NOUVEAU : Conteneur pour les particules d'arrière-plan (Idée 2) */
+        /* Conteneur des particules d'arrière-plan */
         .background-particles {
             position: absolute;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Pour que les particules ne bloquent pas les clics */
-            z-index: -1; /* En arrière-plan */
+            pointer-events: none;
+            z-index: -1;
         }
         .particle {
             position: absolute;
-            background-color: rgba(255, 255, 255, 0.4); /* Blanc semi-transparent */
+            background-color: rgba(255, 255, 255, 0.4);
             border-radius: 50%;
-            animation: moveParticles 20s infinite linear; /* Animation longue */
+            animation: moveParticles 20s infinite linear;
         }
 
+        /* NOUVEAU : Conteneur pour les vies (cœurs) */
+        #livesContainer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .heart {
+            width: 40px; /* Ajustez la taille de vos cœurs */
+            height: 40px;
+            margin-left: 5px;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        .heart.hidden { /* Animation de disparition du cœur */
+            transform: scale(0.5);
+            opacity: 0;
+        }
+
+        /* NOUVEAU : Style pour l'effet de flash */
+        #flashOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            opacity: 0;
+            pointer-events: none; /* Laisse passer les clics */
+            z-index: 9999;
+        }
+        #flashOverlay.flash {
+            animation: flash-animation 0.3s ease-out;
+        }
+        @keyframes flash-animation {
+            0% { opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        /* Style pour le chapeau */
+        #movingHat {
+            position: absolute;
+            cursor: pointer;
+            width: 80px; 
+            height: 80px;
+            object-fit: contain;
+            z-index: 10;
+            transition: transform 0.5s ease-out; /* Mouvement fluide */
+        }
+        #movingHat:hover {
+            transform: scale(1.1);
+        }
+
+        /* Le formulaire de mot de passe */
         .container {
-            background: rgba(255, 255, 255, 0.95); /* Fond légèrement transparent */
+            background: rgba(255, 255, 255, 0.95);
             padding: 30px 40px;
-            border-radius: 12px; /* Coins un peu plus arrondis */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); /* Ombre plus prononcée */
-            z-index: 1; /* Pour être au-dessus des particules */
-            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Garde l'effet pop au survol */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.5s ease;
+            opacity: 0;
+            pointer-events: none; /* Caché par défaut */
         }
-
+        .container.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
         .container:hover {
             transform: scale(1.02);
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
 
-        img {
+        img { /* Logo UNITEAM ADVENTURE */
             max-width: 200px;
             margin-bottom: 20px;
             animation: float 3s ease-in-out infinite;
@@ -62,7 +120,6 @@
 
         h3 {
             color: #333;
-            /* NOUVEAU : Effet de "Glow" sur le titre (Idée 1) */
             text-shadow: 0 0 8px rgba(52, 152, 219, 0.6), 0 0 15px rgba(52, 152, 219, 0.4);
             transition: text-shadow 0.5s ease-in-out;
         }
@@ -70,200 +127,180 @@
             text-shadow: 0 0 12px rgba(52, 152, 219, 0.8), 0 0 20px rgba(52, 152, 219, 0.6);
         }
 
-
+        /* Styles des champs et boutons (inchangés) */
         input[type="password"], input[type="text"] {
-            padding: 12px; /* Un peu plus de padding */
-            font-size: 17px; /* Taille de police légèrement augmentée */
-            border: 1px solid #ccc;
-            border-radius: 6px; /* Coins plus doux */
-            width: 220px;
-            box-sizing: border-box; /* Pour que le padding ne dépasse pas la largeur */
-            transition: border-color 0.3s ease;
+            padding: 12px; font-size: 17px; border: 1px solid #ccc; border-radius: 6px; width: 220px; box-sizing: border-box; transition: border-color 0.3s ease;
         }
         input[type="password"]:focus, input[type="text"]:focus {
-            outline: none;
-            border-color: #3498db; /* Bordure bleue au focus */
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+            outline: none; border-color: #3498db; box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
         }
-        
         button {
-            padding: 12px 25px; /* Plus de padding */
-            font-size: 18px; /* Plus grand */
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease; /* Ajout d'une transition pour le clic */
-            animation: pulse 2s infinite;
+            padding: 12px 25px; font-size: 18px; background-color: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.3s ease, transform 0.1s ease; animation: pulse 2s infinite;
         }
-        button:hover {
-            background-color: #2980b9;
-        }
-        button:active { /* Effet au clic */
-            transform: translateY(1px);
-        }
-
+        button:hover { background-color: #2980b9; }
+        button:active { transform: translateY(1px); }
         .show-pass {
-            font-size: 14px;
-            color: #555;
-            margin-left: 10px;
-            vertical-align: middle;
+            font-size: 14px; color: #555; margin-left: 10px; vertical-align: middle;
         }
         .show-pass input {
-            vertical-align: middle;
-            margin-top: 0;
-            accent-color: #3498db; /* Couleur de la checkbox */
+            vertical-align: middle; margin-top: 0; accent-color: #3498db;
         }
 
-        /* --- Animations --- */
-
+        /* --- Animations (inchangées) --- */
         .shake { animation: shake 0.5s; }
-        @keyframes shake {
-            0% { transform: translateX(0); } 10% { transform: translateX(-10px); } 20% { transform: translateX(10px); } 30% { transform: translateX(-10px); } 40% { transform: translateX(10px); } 50% { transform: translateX(-10px); } 60% { transform: translateX(10px); } 70% { transform: translateX(-10px); } 80% { transform: translateX(10px); } 90% { transform: translateX(-10px); } 100% { transform: translateX(0); }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); }
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; }
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
-        }
-
-        /* NOUVEAU : Animation des particules d'arrière-plan (Idée 2) */
-        @keyframes moveParticles {
-            0% { transform: translate(0, 0) scale(1); opacity: 0; }
-            20% { opacity: 1; }
-            80% { opacity: 1; }
-            100% { transform: translate(var(--x-end), var(--y-end)) scale(var(--scale-end)); opacity: 0; }
-        }
-
-        /* NOUVEAU : Animation du placeholder (Idée 3) */
-        @keyframes animatePlaceholder {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        /* Appliquer l'animation uniquement quand le champ est vide */
-        input::placeholder {
-            animation: animatePlaceholder 2s infinite ease-in-out;
-        }
-        input:focus::placeholder {
-            animation: none; /* Arrêter l'animation quand on commence à taper */
-        }
+        @keyframes shake { 0% { transform: translateX(0); } 10% { transform: translateX(-10px); } 20% { transform: translateX(10px); } 30% { transform: translateX(-10px); } 40% { transform: translateX(10px); } 50% { transform: translateX(-10px); } 60% { transform: translateX(10px); } 70% { transform: translateX(-10px); } 80% { transform: translateX(10px); } 90% { transform: translateX(-10px); } 100% { transform: translateX(0); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); } }
+        @keyframes moveParticles { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translate(var(--x-end), var(--y-end)) scale(var(--scale-end)); opacity: 0; } }
+        input::placeholder { animation: animatePlaceholder 2s infinite ease-in-out; }
+        input:focus::placeholder { animation: none; }
+        @keyframes animatePlaceholder { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
     </style>
 </head>
 <body>
     <div class="background-particles" id="particleContainer"></div>
+    
+    <div id="flashOverlay"></div>
+
+    <div id="livesContainer">
+        <img src="coeur.png" alt="Vie" class="heart">
+        <img src="coeur.png" alt="Vie" class="heart">
+        <img src="coeur.png" alt="Vie" class="heart">
+    </div>
+
+    <img src="chapeau.png" alt="Chapeau à attraper" id="movingHat">
 
     <div class="container" id="loginBox">
-        
         <img src="uniteamadventure.png" alt="Logo Unité Aventure">
-        
-        <h3 id="message">Veuillez entrer le mot de passe</h3>
-        
+        <h3 id="message">Attrapez le chapeau !</h3>
         <input type="password" id="passwordInput" placeholder="Mot de passe">
-        
         <span class="show-pass">
             <input type="checkbox" id="showPassword" onclick="togglePassword()">
             <label for="showPassword">Afficher</label>
         </span>
-        
         <br><br>
         <button onclick="checkPassword()">Valider</button>
     </div>
 
     <script>
-        // Fonction pour afficher/cacher le mot de passe (gardé)
+        // Références aux éléments
+        const loginBox = document.getElementById('loginBox');
+        const movingHat = document.getElementById('movingHat');
+        const messageElement = document.getElementById('message');
+        const flashOverlay = document.getElementById('flashOverlay');
+        const hearts = document.querySelectorAll('.heart'); // Liste des 3 cœurs
+        
+        // Variables du jeu
+        let hatLives = 3; // NOUVEAU
+        let hatMoveInterval;
+
+        // Fonction pour afficher/cacher le mot de passe
         function togglePassword() {
             var passInput = document.getElementById('passwordInput');
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-            } else {
-                passInput.type = 'password';
-            }
+            passInput.type = (passInput.type === 'password') ? 'text' : 'password';
         }
 
+        // Fonction de vérification du mot de passe
         function checkPassword() {
             let input = document.getElementById('passwordInput').value;
-            let loginBox = document.getElementById('loginBox');
-            let message = document.getElementById('message');
-            
             const correctPassword = 'UNITEAM';
 
             if (input.toUpperCase() === correctPassword) {
-                
-                message.textContent = 'Accès autorisé ! Redirection...';
-                message.style.color = 'green';
-                
-                // Confettis ! (Idée 1, gardée)
+                messageElement.textContent = 'Accès autorisé ! Redirection...';
+                messageElement.style.color = 'green';
                 confetti({
-                    particleCount: 150, 
-                    spread: 90,        
-                    origin: { y: 0.6 },
-                    colors: ['#ee7752', '#e73c7e', '#23a6d5', '#23d5ab', '#ffffff'] // Couleurs assorties au dégradé
+                    particleCount: 150, spread: 90, origin: { y: 0.6 },
+                    colors: ['#ee7752', '#e73c7e', '#23a6d5', '#23d5ab', '#ffffff'] 
                 });
-
                 setTimeout(() => {
                     window.location.href = 'https://corentindebritocanica-cloud.github.io/UNITEAM-ADVENTURE/';
-                }, 1500); 
-
+                }, 1500);
             } else {
-                
-                message.textContent = 'Mot de passe incorrect.';
-                message.style.color = 'red';
-                triggerShake(); // Déclencher le tremblement (gardé)
+                messageElement.textContent = 'Mot de passe incorrect.';
+                messageElement.style.color = 'red';
+                triggerShake(); 
             }
         }
 
-        // Fonction pour déclencher le tremblement
+        // Fonction pour secouer le formulaire
         function triggerShake() {
-            let loginBox = document.getElementById('loginBox');
             loginBox.classList.add('shake');
-            setTimeout(() => {
-                loginBox.classList.remove('shake');
-            }, 500); 
+            setTimeout(() => loginBox.classList.remove('shake'), 500); 
         }
 
         // Valider avec "Entrée"
-        document.getElementById('passwordInput').addEventListener('keyup', function(event) {
-            if (event.key === 'Enter') {
-                checkPassword();
+        document.getElementById('passwordInput').addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') checkPassword();
+        });
+
+        // --- NOUVELLE LOGIQUE DU JEU ---
+
+        // Fonction pour déplacer le chapeau aléatoirement
+        function moveHat() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const hatWidth = 80; 
+            const hatHeight = 80;
+
+            const newX = Math.random() * (viewportWidth - hatWidth);
+            const newY = Math.random() * (viewportHeight - hatHeight);
+
+            movingHat.style.left = `${newX}px`;
+            movingHat.style.top = `${newY}px`;
+        }
+
+        // NOUVEAU : Fonction pour déclencher le flash
+        function triggerFlash() {
+            flashOverlay.classList.add('flash');
+            setTimeout(() => flashOverlay.classList.remove('flash'), 300); // 300ms = durée de l'anim
+        }
+
+        // Gérer le clic sur le chapeau
+        movingHat.addEventListener('click', () => {
+            hatLives--; // 1. Décrémente les vies
+
+            triggerFlash(); // 2. Déclenche le flash
+
+            // 3. Cache un cœur (le cœur [2], puis [1], puis [0])
+            if (hearts[hatLives]) { // S'assure que le cœur existe
+                hearts[hatLives].classList.add('hidden');
+            }
+
+            // 4. Vérifie si le jeu est terminé
+            if (hatLives <= 0) {
+                clearInterval(hatMoveInterval); // Arrête le mouvement
+                movingHat.style.display = 'none'; // Cache le chapeau
+
+                loginBox.classList.add('visible'); // Affiche le formulaire
+                messageElement.textContent = 'Veuillez entrer le mot de passe'; // Change le message
+                document.getElementById('passwordInput').focus(); // Focus sur le champ
+            } else {
+                // S'il reste des vies, fait "sauter" le chapeau immédiatement
+                moveHat();
             }
         });
 
-        // NOUVEAU : Génération des particules d'arrière-plan (Idée 2)
-        const particleContainer = document.getElementById('particleContainer');
-        const numParticles = 25; // Nombre de particules
+        // Démarrage du jeu
+        loginBox.classList.remove('visible'); // Assure que le formulaire est caché
+        hatMoveInterval = setInterval(moveHat, 2000); // Fait bouger le chapeau toutes les 2 sec
+        moveHat(); // Positionne le chapeau une première fois
 
+        // --- Génération des particules (inchangée) ---
+        const particleContainer = document.getElementById('particleContainer');
+        const numParticles = 25; 
         for (let i = 0; i < numParticles; i++) {
             const particle = document.createElement('div');
             particle.classList.add('particle');
-            
-            // Taille aléatoire
-            const size = Math.random() * 5 + 3; // Entre 3px et 8px
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-
-            // Position de départ aléatoire (sur tout l'écran)
-            particle.style.left = `${Math.random() * 100}%`;
-            particle.style.top = `${Math.random() * 100}%`;
-
-            // Définir des variables CSS pour l'animation
-            particle.style.setProperty('--x-end', `${(Math.random() - 0.5) * 200}px`); // Déplacement horizontal
-            particle.style.setProperty('--y-end', `${(Math.random() - 0.5) * 200}px`); // Déplacement vertical
-            particle.style.setProperty('--scale-end', `${Math.random() * 0.5 + 0.5}`); // Taille finale
-            particle.style.animationDelay = `${Math.random() * 20}s`; // Délai pour que les animations ne soient pas synchronisées
-            particle.style.animationDuration = `${Math.random() * 20 + 15}s`; // Durée aléatoire entre 15 et 35 secondes
-
+            const size = Math.random() * 5 + 3;
+            particle.style.width = `${size}px`; particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`; particle.style.top = `${Math.random() * 100}%`;
+            particle.style.setProperty('--x-end', `${(Math.random() - 0.5) * 200}px`);
+            particle.style.setProperty('--y-end', `${(Math.random() - 0.5) * 200}px`);
+            particle.style.setProperty('--scale-end', `${Math.random() * 0.5 + 0.5}`);
+            particle.style.animationDelay = `${Math.random() * 20}s`;
+            particle.style.animationDuration = `${Math.random() * 20 + 15}s`;
             particleContainer.appendChild(particle);
         }
     </script>
