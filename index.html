@@ -51,7 +51,6 @@
             height: 40px;
             margin-left: 5px;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-            /* NOUVEAU : Curseur "pointer" pour montrer qu'on peut skipper */
             cursor: pointer; 
         }
         .heart.hidden {
@@ -88,7 +87,8 @@
             height: 80px;
             object-fit: contain;
             z-index: 10;
-            transition: left 0.3s ease-in-out, top 0.3s ease-in-out, transform 0.2s ease-out;
+            /* La transition est maintenant plus longue (0.6s) pour un mouvement plus lent */
+            transition: left 0.6s ease-in-out, top 0.6s ease-in-out, transform 0.2s ease-out;
         }
         #movingHat:hover {
             transform: scale(1.1);
@@ -104,7 +104,8 @@
             opacity: 0;
             filter: blur(8px);
             z-index: 9;
-            transition: left 0.3s ease-in-out, top 0.3s ease-in-out, opacity 0.3s ease-out;
+            /* La transition de la traînée correspond à celle du chapeau */
+            transition: left 0.6s ease-in-out, top 0.6s ease-in-out, opacity 0.3s ease-out;
         }
         #hatTrail.show {
             opacity: 0.6;
@@ -212,7 +213,7 @@
         const messageElement = document.getElementById('message');
         const flashOverlay = document.getElementById('flashOverlay');
         const hearts = document.querySelectorAll('.heart');
-        const livesContainer = document.getElementById('livesContainer'); // NOUVEAU
+        const livesContainer = document.getElementById('livesContainer');
         
         // Variables du jeu
         let hatLives = 3;
@@ -275,7 +276,7 @@
             
             setTimeout(() => {
                 hatTrail.classList.remove('show');
-            }, 300);
+            }, 600); // Doit correspondre à la transition CSS du chapeau
 
             movingHat.style.left = `${newX}px`;
             movingHat.style.top = `${newY}px`;
@@ -300,14 +301,14 @@
             });
         }
 
-        // NOUVEAU : Fonction unique pour arrêter le jeu et montrer le formulaire
+        // Fonction unique pour arrêter le jeu et montrer le formulaire
         function showLoginForm() {
-            clearInterval(hatMoveInterval); // Arrête le mouvement
-            movingHat.style.display = 'none'; // Cache le chapeau
-            hatTrail.style.display = 'none'; // Cache la traînée
-            livesContainer.style.display = 'none'; // Cache les cœurs
+            clearInterval(hatMoveInterval);
+            movingHat.style.display = 'none';
+            hatTrail.style.display = 'none';
+            livesContainer.style.display = 'none';
 
-            loginBox.classList.add('visible'); // Affiche le formulaire
+            loginBox.classList.add('visible');
             messageElement.textContent = 'Veuillez entrer le mot de passe';
             document.getElementById('passwordInput').focus();
         }
@@ -322,26 +323,27 @@
                 hearts[hatLives].classList.add('hidden');
             }
 
-            // NOUVEAU : Appel de la fonction centralisée
             if (hatLives <= 0) {
                 showLoginForm(); 
             } else {
                 moveHat();
                 clearInterval(hatMoveInterval);
-                hatMoveInterval = setInterval(moveHat, 500); 
+                // VITESSE RÉDUITE : L'intervalle est maintenant de 800ms
+                hatMoveInterval = setInterval(moveHat, 800); 
             }
         });
 
-        // NOUVEAU : Logique pour skipper le jeu en cliquant sur un cœur
+        // Logique pour skipper le jeu en cliquant sur un cœur
         hearts.forEach(heart => {
             heart.addEventListener('click', () => {
-                showLoginForm(); // Appelle la même fonction de fin de jeu
+                showLoginForm();
             });
         });
 
         // Démarrage du jeu
         loginBox.classList.remove('visible');
-        hatMoveInterval = setInterval(moveHat, 500); 
+        // VITESSE RÉDUITE : L'intervalle initial est aussi de 800ms
+        hatMoveInterval = setInterval(moveHat, 800); 
         moveHat(); 
 
         // --- Génération des particules (inchangée) ---
