@@ -39,7 +39,7 @@
             animation: moveParticles 20s infinite linear;
         }
 
-        /* NOUVEAU : Conteneur pour les vies (cœurs) */
+        /* Conteneur pour les vies (cœurs) */
         #livesContainer {
             position: absolute;
             top: 20px;
@@ -47,17 +47,17 @@
             z-index: 100;
         }
         .heart {
-            width: 40px; /* Ajustez la taille de vos cœurs */
+            width: 40px; 
             height: 40px;
             margin-left: 5px;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
         }
-        .heart.hidden { /* Animation de disparition du cœur */
+        .heart.hidden {
             transform: scale(0.5);
             opacity: 0;
         }
 
-        /* NOUVEAU : Style pour l'effet de flash */
+        /* Style pour l'effet de flash */
         #flashOverlay {
             position: fixed;
             top: 0;
@@ -66,7 +66,7 @@
             height: 100%;
             background-color: white;
             opacity: 0;
-            pointer-events: none; /* Laisse passer les clics */
+            pointer-events: none;
             z-index: 9999;
         }
         #flashOverlay.flash {
@@ -86,7 +86,11 @@
             height: 80px;
             object-fit: contain;
             z-index: 10;
-            transition: transform 0.5s ease-out; /* Mouvement fluide */
+            
+            /* --- CORRECTION ICI --- */
+            /* La transition s'applique maintenant à left/top pour la glisse */
+            /* Et l'animation de glisse dure 0.8s */
+            transition: left 0.8s ease-in-out, top 0.8s ease-in-out, transform 0.3s ease-out;
         }
         #movingHat:hover {
             transform: scale(1.1);
@@ -101,7 +105,7 @@
             z-index: 1;
             transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.5s ease;
             opacity: 0;
-            pointer-events: none; /* Caché par défaut */
+            pointer-events: none;
         }
         .container.visible {
             opacity: 1;
@@ -190,10 +194,10 @@
         const movingHat = document.getElementById('movingHat');
         const messageElement = document.getElementById('message');
         const flashOverlay = document.getElementById('flashOverlay');
-        const hearts = document.querySelectorAll('.heart'); // Liste des 3 cœurs
+        const hearts = document.querySelectorAll('.heart');
         
         // Variables du jeu
-        let hatLives = 3; // NOUVEAU
+        let hatLives = 3;
         let hatMoveInterval;
 
         // Fonction pour afficher/cacher le mot de passe
@@ -235,7 +239,7 @@
             if (event.key === 'Enter') checkPassword();
         });
 
-        // --- NOUVELLE LOGIQUE DU JEU ---
+        // --- LOGIQUE DU JEU ---
 
         // Fonction pour déplacer le chapeau aléatoirement
         function moveHat() {
@@ -244,47 +248,53 @@
             const hatWidth = 80; 
             const hatHeight = 80;
 
-            const newX = Math.random() * (viewportWidth - hatWidth);
-            const newY = Math.random() * (viewportHeight - hatHeight);
+            // Assure que le chapeau ne sorte pas de l'écran (avec une petite marge)
+            const margin = 20;
+            const newX = Math.random() * (viewportWidth - hatWidth - margin * 2) + margin;
+            const newY = Math.random() * (viewportHeight - hatHeight - margin * 2) + margin;
 
             movingHat.style.left = `${newX}px`;
             movingHat.style.top = `${newY}px`;
         }
 
-        // NOUVEAU : Fonction pour déclencher le flash
+        // Fonction pour déclencher le flash
         function triggerFlash() {
             flashOverlay.classList.add('flash');
-            setTimeout(() => flashOverlay.classList.remove('flash'), 300); // 300ms = durée de l'anim
+            setTimeout(() => flashOverlay.classList.remove('flash'), 300);
         }
 
         // Gérer le clic sur le chapeau
         movingHat.addEventListener('click', () => {
-            hatLives--; // 1. Décrémente les vies
+            hatLives--; 
+            triggerFlash(); 
 
-            triggerFlash(); // 2. Déclenche le flash
-
-            // 3. Cache un cœur (le cœur [2], puis [1], puis [0])
-            if (hearts[hatLives]) { // S'assure que le cœur existe
+            if (hearts[hatLives]) {
                 hearts[hatLives].classList.add('hidden');
             }
 
-            // 4. Vérifie si le jeu est terminé
             if (hatLives <= 0) {
-                clearInterval(hatMoveInterval); // Arrête le mouvement
-                movingHat.style.display = 'none'; // Cache le chapeau
+                clearInterval(hatMoveInterval); 
+                movingHat.style.display = 'none'; 
 
-                loginBox.classList.add('visible'); // Affiche le formulaire
-                messageElement.textContent = 'Veuillez entrer le mot de passe'; // Change le message
-                document.getElementById('passwordInput').focus(); // Focus sur le champ
+                loginBox.classList.add('visible'); 
+                messageElement.textContent = 'Veuillez entrer le mot de passe';
+                document.getElementById('passwordInput').focus();
             } else {
-                // S'il reste des vies, fait "sauter" le chapeau immédiatement
+                // Fait sauter le chapeau immédiatement
                 moveHat();
+                // On réinitialise l'intervalle pour éviter un double saut
+                clearInterval(hatMoveInterval);
+                hatMoveInterval = setInterval(moveHat, 1000);
             }
         });
 
         // Démarrage du jeu
-        loginBox.classList.remove('visible'); // Assure que le formulaire est caché
-        hatMoveInterval = setInterval(moveHat, 2000); // Fait bouger le chapeau toutes les 2 sec
+        loginBox.classList.remove('visible');
+        
+        /* --- CORRECTION ICI --- */
+        // L'intervalle est réduit à 1000ms (1 seconde) pour plus de vitesse
+        hatMoveInterval = setInterval(moveHat, 1000); 
+        
         moveHat(); // Positionne le chapeau une première fois
 
         // --- Génération des particules (inchangée) ---
